@@ -314,7 +314,7 @@ chisq.test(as.factor(SibSp), as.factor(Survived))
 
 Observamos que las tres variables son muy significativas y dependientes entre ellas. Además, se ha visto que las tres explican la supervivencia o no de los pasajeros.
 
-### Variable Name
+### 4.5. Variable Name
 
 La variable **Name** contiene el nombre y apellidos de los pasajeros. A partir de esta variable podemos separar el nombre del pasajero con el apellido. No se considera que sea una variable determinística para predecir los datos, pero su análisis puede ayudar a entender a comprender más su naturaleza.
 
@@ -347,20 +347,20 @@ text(cex=1, x=x-.25, y=-1.25, labs, xpd=TRUE, srt=45)
 En el gráfico anterior se han mostrado las 10 familias con más miembros en el Titanic. Imprimimos todos los pasajeros de la misma familia de las familias Andersson y Goodwin para analizar la naturalidad de los datos.
 
 ```{r}
-datos[datos$surnames=='Andersson' | datos$surnames=='Carter', ]
+datos[datos$surnames=='Andersson' | datos$surnames=='Carter', c(4, 9)]
 ```
 
 Tras analizar estos datos, es posible sacar algunas conclusiones que explican la naturaleza de los datos. Por ejemplo, cuando dos o más personas tienen el mismo ticket y precio es que pertenecen  a la mismsa familia.
 
 ```{r}
-datos[datos$Ticket=='347082', ]
+datos[datos$Ticket=='347082', c(4, 9)]
 ```
 
 Por ejemplo, la familia Andersson con número de ticket 347082 de 7 miembros (ninguno de ellos sobrevivió) tiene el mismo número de ticket y costó el mismo precio.
 
 La variable **Name** ayuda a entender los datos, pero la información está instrínseca dentro de los tickets, precios e incluso los números de parientes. Por lo tanto, más allá de una variable que nos ayude a comprender que familias iban a bordo del Titanic no es una variable explicativa para alimentar el algoritmo ya que estaríamos especializando al algoritmo.
 
-### 4.5. Variable Parch
+### 4.6. Variable Parch
 
 Esta variable hace referencia al número de padres e hijos. No presenta ningún valor NA o vacía, y oscila en el rango de 0 a 6. Se va a categorizar transformándola con la función `as.factor()` y presenar su distribución mediante un diagrama de barras con sus frecuencias relativas.
 
@@ -435,7 +435,7 @@ Esta variable nos indica el valor del billete. Se ha de suponer que las clases s
 
 
 ```{r variable Fare valores 0 }
-datos[which(datos$Fare==0),]
+nrow(datos[which(datos$Fare==0), ])
 ```
 
 Analizamos la distribución de la variable.
@@ -449,7 +449,7 @@ lines(density(Fare), col = 'red', lwd='3')
 ```
 
 
-Estos 16 valores pertencen a datos que no se han rellenado por lo que debido al bajo número se procederá a la imputación de datos a partir del método de los vecinos más próximos mediante la función `kNN()`. Para ello se seleccionaran como variables las que pueden tener relación con el valor del billete: Clase del billete (**Pclass**), si es o no de cabina (**Cabin**) y el lugar de embarque (**Embarked**). No se usará la edad, ya que hay una elevada proporción de valores no espeficicados. La variable **Embarked** tiene dos valores vacíos, pero ninguno de ellos coincide con los valores que queremos imputar.
+Estos 15 valores pertencen a datos que no se han rellenado por lo que debido al bajo número se procederá a la imputación de datos a partir del método de los vecinos más próximos mediante la función `kNN()`. Para ello se seleccionaran como variables las que pueden tener relación con el valor del billete: Clase del billete (**Pclass**), si es o no de cabina (**Cabin**) y el lugar de embarque (**Embarked**). No se usará la edad, ya que hay una elevada proporción de valores no espeficicados. La variable **Embarked** tiene dos valores vacíos, pero ninguno de ellos coincide con los valores que queremos imputar.
 
 ```{r imputacion Fare, message = FALSE}
 library(dplyr)
@@ -502,105 +502,6 @@ datos$Fare_norm <-x.norm
 
 Se probarán tanto la variable transformada como la variable original en el algoritmo para ver cual tiene mejor capacidad de predicción.
 
-### 4.6. Variable Ticket y Cabin
-
-La variable **Ticket** es indicativa del número de ticket de cada pasajero por lo que tiene un total de 681 valores únicos, sabemos que esto es debido a qué todos los miembros de una misma familia tienen el mimso número de ticket. No se va a utilizar para el análisis ya que no se considera que de información relevante, o más bien pese a qué pueda tener una dependencia con la variable survived estaríamos especializando el algoritmo a nuestro set de datos de entrenamiento. Respecto a la variable **Cabin**, da información de la cabina donde se alojó un pasajero. Los valores vacios corresponden a pasajeros que no se han alojado en cabina. Como se ha visto con anterioridad, la clase en la que se alojó un pasajero puede influir en su supervivencia, así que es de esperar que el hecho que esté alojado en cabina o no pueda tambien afectar a su posisbilidad de vivir, ya que se entiende que el alojarse en cabina es más caro.
-
-En primer lugar, queremos saber si el precio definido en al variable **Fare** es diferente cuando la variable **Cabin** está informada. Para ello definimos la siguiente contraste de hipótesis de medias de los subconjuntos según la cabina está informada o no.
-
-$$
-H_0: \mu_1 = \mu_2
-\\
-H_1: \mu_1 \neq \mu_2
-\\
-\text{donde, 1 es el conjunto con Cabin especificada y 2 no.}
-$$
-
-Debido a que la variable Fare no es normal, pero tenemos más de 30 muestras para cada una podemos aplicar el teorema del límite central, luego tenemos la variable $\frac{\overline{X}_1 - \overline{X}_2}{S_{\overline{X}_1 - \overline{X}_2}}$ que sigue una distribución normal $N(0, 1)$.
-
-```{r}
-cabin_specified_set <- subset(datos[datos$Cabin!="", ], select = c(Cabin, Fare))
-cabin_not_specified_set <- subset(datos[datos$Cabin=="", ], select = c(Cabin, Fare))
-
-z_num <- mean(cabin_specified_set$Fare) - mean(cabin_not_specified_set$Fare)
-z_den <- sqrt(
-  ((sd(cabin_specified_set$Fare)^2)/length(cabin_specified_set$Fare))
-  +
-  ((sd(cabin_not_specified_set$Fare)^2)/length(cabin_not_specified_set$Fare))
-)
-z <- z_num / z_den
-z
-```
-
-Debido a que z sigue una distribución normal, entonces el p-valor corresponidente es:
-
-$$
-p = 2P(Z>|z|)
-$$
-
-```{r}
-0.05 < 2*pnorm(z, lower.tail = F)
-```
-
-Debido a que el p-valor es inferior al nivel de significancia fijado como $\alpha=0.05$ rechazamos la hipótesis nula a favor de la hipótesis alternativa y podemos considerar que los precios entre tener cabina informada o no son diferentes. Por lo tanto, trataremos aquellos registros cuya cabina no está infomrada que se consideren valores extremos como cabinas informadas. Para los que tengan cabina informada asumiremos que es correcto.
-
-
-
-```{r}
-# analizamos las distribuciones de los pesos
-# Histogram with density plot
-g1 <- ggplot(cabin_specified_set, aes(x=Fare)) + 
- geom_histogram(aes(y=..density..), colour="black", fill="white")+
- geom_density(alpha=.2, fill="#FF6666")+
- ggtitle('Cabin specified - Fare')
-
-g2 <- ggplot(cabin_not_specified_set, aes(x=Fare)) + 
- geom_histogram(aes(y=..density..), colour="black", fill="white")+
- geom_density(alpha=.2, fill="#FF6666")+
- ggtitle('Not cabin specified - Fare')
-
-grid.arrange(g1, g2, ncol=1, nrow=2)
-```
-
-Para categorizar la variable **Cabin** separaremos entre los que poseen cabina y los que no. Como es posible observar en la gráfica anterior, la gran cantidad de población se encuentra más cercana al 0 para los que no tienen cabina asignada que para los que sí. Debido a qué se quiere categorizar la variable que cabin manteniendo la máxima coherencia en los datos se usará un umbral de Fare para decidir si es sin cabina o con cabina para aquellos datos que no tengan cabina especificados. Este umbral será a partir de lo que consdieramos un valor atípico leve definido por $Q_3 + 1.5 \cdot IQR$ donde $IQR=Q_3-Q_1$.
-
-```{r}
-g1 <- ggplot(cabin_not_specified_set, aes(y = Fare))+geom_boxplot()
-g2 <- ggplot(cabin_not_specified_set, aes(y = Fare))+geom_boxplot()+ylim(c(0,100))
-grid.arrange(g1, g2, ncol=2, nrow=1)
-```
-
-```{r}
-cuantiles <- quantile(cabin_not_specified_set$Fare)
-threshold_cabin <- cuantiles[3] + (1.5 * (cuantiles[3]-cuantiles[1]))
-```
-
-Categorizamos la variable.
-
-```{r}
-# categorizamos la variable
-datos$Cabin_cat <- as.factor(mapply(
-  function (cabin, fare) if (cabin!="" && fare > threshold_cabin) "with_cabin" else "without_cabin",
-  cabin=datos$Cabin,
-  fare=datos$Fare
-))
-
-detach(datos)
-attach(datos)
-
-ggplot(data = datos,aes(x=Cabin_cat,fill=Survived))+geom_bar(position="fill")+ylab("Frecuency")
-```
-
- Se puede observar como el hecho de tener cabina aumenta la probabilidad de de supervivencia. Por lo tanto, será una buena variable predictora.
-
-Se realiza un test de chi-cuadrado para comprobar si las variables son dependientes con almenos un nivel de significación del $\alpha = 0.05$.
-
-```{r}
-chisq.test(Survived, Cabin_cat)
-```
-
-Como se puede observar en el resultado previo, la vriable **Cabin_cat** y la variable **Survived** son dependientes.
-
 ### 4.8. Variable Embarked
 La variable **Embarked** tiene 3 niveles diferentes, e informa del puerto en que embarcó el pasajero. Contiene dos valores vacios que al igual que en el caso de **Fare** serán imputados. Para esta imputación se usarán tambien las variables **Fare**, **Pclass** y **Cabin**, ya que se entiende que ha de haber una relación entre precio, si es cabina o no, la clase  y la ciudad de embarque.
 ```{r variable Embarked imputacion, message = FALSE }
@@ -633,13 +534,173 @@ ggplot(data = datos,aes(x=Embarked,fill=Survived))+geom_bar(position="fill")+yla
 
 ```
 
-### 4.9. Resumen de los datos 
+### 4.9. Variable Ticket y Cabin
+
+La variable **Ticket** es indicativa del número de ticket de cada pasajero por lo que tiene un total de 681 valores únicos, sabemos que esto es debido a qué todos los miembros de una misma familia tienen el mimso número de ticket. No se va a utilizar para el análisis ya que no se considera que de información relevante, o más bien pese a qué pueda tener una dependencia con la variable survived estaríamos especializando el algoritmo a nuestro set de datos de entrenamiento. Respecto a la variable **Cabin**, da información de la cabina donde se alojó un pasajero. Los valores vacios corresponden a pasajeros que no se han alojado en cabina. Como se ha visto con anterioridad, la clase en la que se alojó un pasajero puede influir en su supervivencia, así que es de esperar que el hecho que esté alojado en cabina o no pueda tambien afectar a su posisbilidad de vivir, ya que se entiende que el alojarse en cabina es más caro.
+
+En primer lugar, queremos saber si el precio definido en al variable **Fare** es diferente cuando la variable **Cabin** está informada. Para ello definimos la siguiente contraste de hipótesis de medias de los subconjuntos según la cabina está informada o no.
+
+$$
+H_0: \mu_1 = \mu_2
+\\
+H_1: \mu_1 \neq \mu_2
+\\
+\text{donde, 1 es el conjunto con Cabin especificada y 2 no.}
+$$
+
+Debido a que la variable Fare no es normal, pero tenemos más de 30 muestras para cada una podemos aplicar el teorema del límite central, luego tenemos la variable $\frac{\overline{X}_1 - \overline{X}_2}{S_{\overline{X}_1 - \overline{X}_2}}$ que sigue una distribución normal $N(0, 1)$.
+
+```{r}
+# generamos una función para calcular el estadístico z por el teorema del límite central
+calculate_z <- function(x, y) {
+  # calculamos el numerador
+  z_num <- mean(x) - mean(y)
+  z_den <- sqrt(
+    ((sd(x)^2)/length(x))
+    +
+    ((sd(y)^2)/length(y))
+  )
+  z <- z_num / z_den
+  z
+}
+
+z <- calculate_z(datos[datos$Cabin!="", ]$Fare, (datos[datos$Cabin=="", ]$Fare))
+z;
+```
+
+Debido a que z sigue una distribución normal, entonces el p-valor corresponidente es:
+
+$$
+p = 2P(Z>|z|)
+$$
+
+```{r}
+0.05 < 2*pnorm(z, lower.tail = F)
+```
+
+Debido a que el p-valor es inferior al nivel de significancia fijado como $\alpha=0.05$ rechazamos la hipótesis nula a favor de la hipótesis alternativa y podemos considerar que los precios entre tener cabina informada o no son diferentes. Por lo tanto, trataremos aquellos registros cuya cabina no está infomrada que se consideren valores extremos como cabinas informadas. Para los que tengan cabina informada asumiremos que es correcto.
+
+A continuación, queremos afirmar si existe alguna relación entre la variable Fare y los diferentes Embarked para entonces, categorizar la variable en dependencia de ellos.
+
+```{r}
+for (e in unique(Embarked[Embarked!=''])) { 
+
+  z <- calculate_z(datos[datos$Embarked==e, ]$Fare, datos[datos$Embarked!=e, ]$Fare)
+  result <- 0.05 < 2*pnorm(z, lower.tail = F)
+  
+  print(paste('Las medias Fare de embarked: ', e, ' y las otras son iguales -> ', result, sep = ''))
+}
+```
+
+Por lo tanto, con un nivel de significancia del 0.05 podemos afirmar que para Embarked 'C' la media variable Fare es diferente de las otras y debemos considerarla para separar los navegantes con cabina y sin cabina. 
+
+```{r}
+# analizamos las distribuciones de los pesos
+cabin_specified_set <- subset(datos[datos$Cabin!="", ], select = c(Cabin, Fare))
+cabin_not_specified_set <- subset(datos[datos$Cabin=="", ], select = c(Cabin, Fare))
+
+# Histogram with density plot
+g1 <- ggplot(datos[datos$Cabin!="", ], aes(x=Fare)) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="white")+
+ geom_density(alpha=.2, fill="#FF6666")+
+ ggtitle('Cabin specified - Fare')
+
+g2 <- ggplot(datos[datos$Cabin=="", ], aes(x=Fare)) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="white")+
+ geom_density(alpha=.2, fill="#FF6666")+
+ ggtitle('Not cabin specified - Fare')
+
+grid.arrange(g1, g2, ncol=1, nrow=2)
+
+g3 <- ggplot(datos[datos$Cabin!="" & datos$Embarked=='C', ], aes(x=Fare)) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="white")+
+ geom_density(alpha=.2, fill="#FF6666")+
+ ggtitle('Cabin specified - Fare Embarked: C')
+ 
+g4 <- ggplot(datos[datos$Cabin=="" & datos$Embarked=='C', ], aes(x=Fare)) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="white")+
+ geom_density(alpha=.2, fill="#FF6666")+
+ ggtitle('Not cabin specified - Fare Embarked: C')
+
+grid.arrange(g3, g4, ncol=1, nrow=2)
+```
+
+Para categorizar la variable **Cabin** separaremos entre los que poseen cabina y los que no. Como es posible observar en la gráfica anterior, la gran cantidad de población se encuentra más cercana al 0 para los que no tienen cabina asignada que para los que sí. Debido a qué se quiere categorizar la variable que cabin manteniendo la máxima coherencia en los datos se usará un umbral de Fare para decidir si es sin cabina o con cabina para aquellos datos que no tengan cabina especificados. Este umbral será a partir de lo que consdieramos un valor atípico leve definido por $Q_3 + 1.5 \cdot IQR$ donde $IQR=Q_3-Q_1$.
+
+```{r}
+g1 <- ggplot(datos[datos$Cabin=="" & datos$Embarked!='C', ], aes(y = Fare)
+             ) + geom_boxplot()
+g2 <- ggplot(datos[datos$Cabin=="" & datos$Embarked!='C', ], aes(y = Fare)
+             ) + geom_boxplot() + ylim(c(0,100))
+
+grid.arrange(g1, g2, ncol=2, nrow=1, top = 'BoxPlot Fare, empty Cabin Embarked S and Q')
+
+
+g3 <- ggplot(datos[datos$Cabin=="" & datos$Embarked=='C', ], aes(y = Fare)
+             ) + geom_boxplot() 
+g4 <- ggplot(datos[datos$Cabin=="" & datos$Embarked=='C', ], aes(y = Fare)
+             ) + geom_boxplot() + ylim(c(0,100))
+
+grid.arrange(g3, g4, ncol=2, nrow=1, top = 'BoxPlot Fare, empty Cabin Embarked C')
+```
+
+A continuación, se calculan los umbrales para categorizar las variables nulas.
+
+```{r}
+# generamos el threshold de la variable Fare para los Embarked S y Q
+cuantiles_S_Q <- quantile(datos[datos$Cabin=="", ]$Fare)
+threshold_cabin_S_Q <- cuantiles_S_Q[3] + (1.5 * (cuantiles_S_Q[3]-cuantiles_S_Q[1]))
+
+# generamos el threshold de la variable Fare para los Embarked C
+cuantiles_C <- quantile(datos[datos$Cabin=="" & datos$Embarked=='C', ]$Fare)
+threshold_cabin_C <- cuantiles_C[3] + (1.5 * (cuantiles_C[3]-cuantiles_C[1]))
+```
+
+Categorizamos la variable.
+
+```{r}
+# categorize the variables for the Embarked values different to C
+categorize_cabin <- function(cabin, fare, embarked) {
+  if (embarked == 'C') {
+    if (cabin!="" && fare > threshold_cabin_C) "with_cabin" else "without_cabin"
+  }
+  else {
+    if (cabin!="" && fare > threshold_cabin_S_Q) "with_cabin" else "without_cabin"
+  }
+}
+
+datos$Cabin_cat <- as.factor(mapply(
+  categorize_cabin,
+  cabin=datos$Cabin,
+  fare=datos$Fare,
+  embarked=datos$Embarked
+))
+
+
+detach(datos)
+attach(datos)
+
+ggplot(data = datos,aes(x=Cabin_cat,fill=Survived))+geom_bar(position="fill")+ylab("Frecuency")
+```
+
+ Se puede observar como el hecho de tener cabina aumenta la probabilidad de de supervivencia. Por lo tanto, será una buena variable predictora.
+
+Se realiza un test de chi-cuadrado para comprobar si las variables son dependientes con almenos un nivel de significación del $\alpha = 0.05$.
+
+```{r}
+chisq.test(Survived, Cabin_cat)
+```
+
+Como se puede observar en el resultado previo, la vriable **Cabin_cat** y la variable **Survived** son dependientes.
+
+
+### 4.10. Resumen de los datos 
 Se adjunta un resumen de los datos. 
 ```{r resumen fichero}
 summary(datos)
 ```
 
-### 4.10. Guardado de datos
+### 4.11. Guardado de datos
 una vez procesados los datos se guardan en formato csv. Se guardaran tambien las variables que no se vayan a usar en la predicción como son **Name**, **Ticket**
 
 ```{r guardado}

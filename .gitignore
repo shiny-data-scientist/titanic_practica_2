@@ -1,0 +1,6 @@
+# Adding some documents we don't want in the github repo
+
+.RData
+.Rhistory
+Making_test_with_age.Rmd
+titanic.zip
