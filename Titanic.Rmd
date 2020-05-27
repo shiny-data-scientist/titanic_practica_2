@@ -15,10 +15,6 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r, include=FALSE}
-setwd("D:/GoogleDrive/Master's Degree Data Science/2020Q1_Tipología y ciclo de vida de los datos/Práctica 2 - Limpieza y Análisis de Datos/PRAC2")
-```
-
 
 ## 1. Introducción
 
@@ -64,16 +60,14 @@ Referente a que variables se encuentran incompletas, la variable **Age** tiene 1
 A continuación se pasarán a analizar las variables de forma individual teniendo en cuenta que el mayor interés se centra en su relación con la variable **Survived** ya que el fin de este preprocesado preparar el juego de datos para poder predecir la probabilidad de cada pasajero de sobrevivir. 
 
 ## 4. Análisis de las variables 
-Hay dos variables que no se van a analizar ya que presentan un valor diferente para cada observación (i.e. 891) y por lo tanto no pueden ser indicativas de ninguna tendencia en los datos referente a la supervivencia. Estas variables son el identificador del pasajero (**PassengerID**), cuyo objetivo es identificar a cada pasajero por por un número, y la variable nombre (**Name**), que identifica a cada pasajero por su nombre. 
+La variable  **PassangerID** no se va a analizar ya que sirve para identificar a cada pasajero y presenta un valor diferente para cada observación (i.e. 891).  por lo que no puede ser indicativa de ninguna tendencia en los datos referente a la supervivencia.
 
 ```{r variables únicas }
 apply(datos, 2, function(x) length(unique(x)))
 ```
 
 ### 4.1. Variable Pclass
-Esta variable es indicativa de la clase a la que pertenece cada pasajero, y tiene valores entre 1 y 3, siendo 1 la clase más alta y la 3 la más baja. Como se ha visto con anterioridad no presenta ni valores NA ni vacíos.  Para ver su relación con la tasa de supervivencia primero se pasa a variable categórica tanto la variable **Survived** como **Pclass** con la función `as.factor()` y después se hace un gráfica de barras de cada clase con el porcentaje de supervivencia. 
-
-A continuación, se analiza la distribución de la variable. Debido a que es una variable categóricno no encontramos valores extremos.
+Esta variable es indicativa de la clase a la que pertenece cada pasajero, y tiene valores entre 1 y 3, siendo 1 la clase más alta y la 3 la más baja. Como se ha visto con anterioridad no presenta ni valores NA ni vacíos.  Se analiza la distribución de la variable, no haciendo análisis de valores extremos debido a que se va a considerar una variable categórica. A continuación se observa su relación con la variable de supervivencia. 
 
 ```{r distribution Pclass}
 f.relativas.Pclass <- sort(
@@ -85,13 +79,13 @@ barplot(
   f.relativas.Pclass,
   col = 'salmon',
   main = 'Diagrama de barras Pclass',
-  xlab = 'pclass',
-  ylab = 'frecuencia relativa (%)',
+  xlab = 'Pclass',
+  ylab = 'Frecuencia relativa (%)',
   ylim = c(0, 60)
 )
 ```
 
-En el diagrama de barras de las frecunecias relativas se observa que la mayor cantidad de pasajeros viajaban en tercera clase.
+En el diagrama de barras de las frecuencias relativas se observa que la mayor cantidad de pasajeros viajaban en tercera clase.
 
 ```{r variable Pclass, message = FALSE }
 library(ggplot2)
@@ -104,7 +98,7 @@ datos$Pclass<-as.factor(datos$Pclass)
 # Gráfica
 ggplot(
   data = datos,aes(x=Pclass,fill=Survived)
-  ) + geom_bar(position="fill") + ylab("Frecuency") + xlab("Class")
+  ) + geom_bar(position="fill") + ylab("Frecuencia") + xlab("PClass")
 ```
 
 Se observa como a clase más alta existe mayor probabilidad de supervivencia. 
@@ -124,8 +118,8 @@ barplot(
   f.relativas.Sex,
   col = 'salmon',
   main = 'Diagrama de barras Pclass',
-  xlab = 'pclass',
-  ylab = 'frecuencia relativa (%)',
+  xlab = 'Sex',
+  ylab = 'Frecuencia relativa (%)',
   ylim = c(0, 80)
 )
 ```
@@ -136,7 +130,7 @@ Se observa que la mayor cantidad de pasajeros eran hombres. Su representación g
 ```{r variable Sex }
 
 # Gráfica
-ggplot(data = datos,aes(x=Sex,fill=Survived))+geom_bar(position="fill")+ylab("Frecuency")+xlab("Sex")
+ggplot(data = datos,aes(x=Sex,fill=Survived))+geom_bar(position="fill")+ylab("Frecuencia")+xlab("Sex")
 
 ```
 
@@ -144,7 +138,7 @@ Se observa como la probabilidad de supervivencia aumenta notablemente por el hec
 
 ### 4.3. Variable Age
 
-En primer lugar, analizamos la dsitribución de la variable Age.
+En primer lugar, analizamos la distribución de la variable Age.
 
 ```{r Age distribution}
 # dibujamos el histograma con la línea de densidad sin tener en cuenta 
@@ -152,11 +146,12 @@ En primer lugar, analizamos la dsitribución de la variable Age.
 hist(Age, col = 'darkslategray1',
      main = 'Histograma + densidad de la variable Age',
      freq = FALSE,
+     ylab =  "Densidad",
      xlab = 'Age')
 lines(density(Age[!is.na(Age)]), col = 'red', lwd='3')
 ```
 
-Una vez conocida la distribución de la variable **Age** (edad), que no sigue una distribución normal en todos sus valores, es necesario trabajar los valores nulos. Esta presenta un total de 177 valores NA que se han de estudiar para  tomar una decisión a cerca de su tratamiento. Debido al gran numero con respecto al total (177 sobre 891) no se aconseja eliminar los casos. Por lo tanto, primero se evaluará si dichos valores (nulos) tienen una relación con el hecho que el indidividuo sobreviva o no. Anterioremente, se ha visto que la clase determina en cierto modo las proabibilidades de sobrevivir o no, y posiblemente el hecho de disponer o no de la edad puede depender de la clase. Para ver si hay o no dependencia entre **Survived** y **Age** primero se categorizará la variable **Age** en función de si se especifica o no la edad, para posteriomente hacer un test *Chi-cuadrado* de independencia de variables mediante la función `chisq.test()`. 
+Una vez conocida la distribución de la variable **Age** (edad), que no sigue una distribución normal , es necesario trabajar los valores nulos. Esta presenta un total de 177 valores NA que se han de estudiar para  tomar una decisión a cerca de su tratamiento. Debido al gran numero con respecto al total (177 sobre 891) no se aconseja eliminar los casos. Por lo tanto, primero se evaluará si dichos valores (nulos) tienen una relación con el hecho que el indidividuo sobreviva o no. Anterioremente, se ha visto que la clase determina en cierto modo las proabibilidades de sobrevivir o no, y posiblemente el hecho de disponer o no de la edad puede depender de la clase. Para ver si hay o no dependencia entre **Survived** y **Age** primero se categorizará la variable **Age** en función de si se especifica o no la edad, para posteriomente hacer un test *Chi-cuadrado* de independencia de variables mediante la función `chisq.test()`. 
 
 $$
 \text{Hipótesis nula. } H_0 \text{: Las variables son independientes.}
@@ -190,7 +185,7 @@ chisq.test(table_prop)
 
 Como se puede observar el $\text{p-valor} < \alpha=0.05$, done $\alpha = 0.05$ es el nivel de significación para un nivel de confianza del 95%, por lo tanto, rechazamos $H_0$  concluyendo que las variables son dependientes, luego existe una relación entre haber proporcionado la edad y la supervivencia.  
 
-Por ello, no se recomienda hacer ningun cálculo como puede ser la media para completar esta variable ya que le estariamos dando un valor promedio no beneficiandonos de su posible poder de predicción para el análisis. Una posible solución es imputar los valores por medios probabilísticos a partir de la funcion `knn()`, y que los casos más cercanos en cuanto a otros atributos determinen el valor. Sin embargo, el gran número de casos de esta variable puede hacer que su gran numero de predicciones (177 sobre 891) la haga poco realista provocando errores. Se optará por discretizar la variable en función de grupos de edad, y crear un grupo con estas valores con la etiqueta *not_specified*.  Para ello se ve si existe primero alguna relación entre edad y supervivencia, para posteriomente crear los grupos. Mediante el histograma que abajo se muestra en número totales, se observa como la distribución de la variable no es del todo normal, ya que a edades bajas hay mas población de la esperada, y que esta tiene una mayor probabilidad de supervivencia. Además mediante un `box_plot()`se observa la presencia de *outliers*, sin embargo como se va a discretizar la variable no presentan ningún problema.
+Por ello, no se recomienda hacer ningun cálculo como puede ser la media para completar esta variable ya que le estariamos dando un valor promedio no beneficiandonos de su posible poder de predicción para el análisis. Una posible solución es imputar los valores por medios probabilísticos a partir de la funcion `knn()`, y que los casos más cercanos en cuanto a otros atributos determinen el valor. Sin embargo, el gran número de casos de esta variable puede hacer que su gran numero de predicciones (177 sobre 891) la haga poco realista provocando errores. Se optará por discretizar la variable en función de grupos de edad, y crear un grupo con estas valores con la etiqueta *edad_no_especificada*.  Para ello se ve si existe primero alguna relación entre edad y supervivencia, para posteriomente crear los grupos. Mediante el histograma que abajo se muestra en número totales, se observa como la distribución de la variable no es del todo normal, ya que a edades bajas hay mas población de la esperada, y que esta tiene una mayor probabilidad de supervivencia. Además mediante un `box_plot()`se observa la presencia de *outliers*, sin embargo como se va a discretizar la variable no presentan ningún problema.
 
 ```{r variable Age distribución }
 # Datos donde se especifica la edad
@@ -211,15 +206,15 @@ age_survived_with_specified_age <- subset(
 ###### CONSULTAR
 
 # Grafico de conteos totales en
-ggplot(data = data_age, aes(x=Age_specified, fill=Survived_age_specified))+geom_histogram(bins = 80)
+ggplot(data = data_age, aes(x=Age_specified,  fill=Survived_age_specified))+geom_histogram(bins = 80)+ylab("Número")+xlab("Age")
 
 # Gráfico para observar valores extremos
 
-boxplot(data_age$Age_specified, main = "Age", ylab = "years", col="orange")
+boxplot(data_age$Age_specified, main = "Age", ylab = "Años", col="orange")
 
 ```
 
-En el histograma de la variable age junto con la probabilidad de supervivencia es posible observar que a menos edad mayor tasa de supervivencia. Por lo tanto, nos encontramos ante un escenario dónde sabemos que la edad no especificada es dependiente con la variable survived. Además, pertenecer al rango de menos edad significa tener más probabilidad de sobrevivir. Por lo tanto, para discretizar la variable se ha de escoger un valor óptimo que discretice la edad en grupos maximizando la información sobre la supervivencia o no del pasajero.Para ello se usará los *Odds-Ratio* que nos medirá si es más probable sobrevivir, de esta forma, obtendremos el valor de la edad dónde es aún significativo para determinar la supervivencia respecto a la edad. Para ello se van a escoger edades entre 1 y 30 como humbral de discrimanción y se va a hacer un gráfico con el resultado. 
+En el histograma de la variable **age** junto con la probabilidad de supervivencia es posible observar que a menos edad mayor tasa de supervivencia. Por lo tanto, nos encontramos ante un escenario dónde sabemos que la edad no especificada es dependiente con la variable **Survived**. Además, pertenecer al rango de menos edad significa tener más probabilidad de sobrevivir. Por lo tanto, para discretizar la variable se ha de escoger un valor óptimo que discretice la edad en grupos maximizando la información sobre la supervivencia o no del pasajero. Para ello se usará los *Odds-Ratio*, que nos medirá si es más probable sobrevivir a una edad con respecto al resto. Para ello se van a escoger edades entre 1 y 30 como humbral de discrimanción y se va a hacer un gráfico con el resultado. 
 
 ```{r variable Age odds ratop de supervivencia}
 survived_age<-relevel(data_age$Survived_age_specified,ref="1")
@@ -240,7 +235,7 @@ for (i in 1:30){
 plot(result, xlab ="Age", ylab="Odds-Ratio", yaxp  = c(0, 10, 10))
 ```
 
-Como se puede observar , a medida que disminuye la edad aumenta la probabilidad de supervivencia, la cual se mantiene al doble para edades menores de 16 años. A partir de 21, se puede considerar que no hay diferencias sustanciales siendo la *Odds-ratio* similiar a 1. Escoger una edad muy baja, mejora la predicción , pero sin embargo como la mayoria de la poblacion como se ve en el histograma esta concentrada en edades alrededor de 30 años , esta variable dejará de ser util para un segmento amplio de nuestro juego de datos. Escoger un valor muy alto de edad, puede hacer la variable mas util para una mayor parte del juego de datos pero con menor capacidad predictiva. Por ello se escogera un valor de compromiso, considerando como que el doble de probabilidad de supervivencia es un buen indicador y además incluye a un amplio segmento de la población joven, por lo que para discretizar la variable se usará 16 años como limite entre niño y adulto. Teniendo en cuenta esto la variable **Age** se discretizará de la siguiente manera. Tambien se muestra el resultado final en comparación von la variable supervivencia. 
+Como se puede observar , a medida que disminuye la edad aumenta la probabilidad de supervivencia, la cual se mantiene al doble para edades menores de 16 años. A partir de 21, se puede considerar que no hay diferencias sustanciales siendo la *Odds-ratio* similiar a 1. Escoger una edad muy baja, mejora la predicción , pero sin embargo como la mayoria de la poblacion como se ve en el histograma esta concentrada en edades alrededor de 30 años , esta variable dejará de ser util para un segmento amplio de nuestro juego de datos. Escoger un valor muy alto de edad, puede hacer la variable mas util para una mayor parte del juego de datos pero con menor capacidad predictiva. Por ello se escogera un valor de compromiso, considerando como que el doble de probabilidad de supervivencia es un buen indicador y además incluye a un amplio segmento de la población joven, por lo que para discretizar la variable se usará 16 años como limite entre niño y adulto. Teniendo en cuenta esto, la variable **Age** se discretizará de la siguiente manera. Tambien se muestra el resultado final en comparación con la variable supervivencia. 
 
 ```{r discretización variable age}
 ## Grupos niño, adulto y sin especificar
@@ -257,7 +252,7 @@ datos$Age_cat<-as.factor(edad)
 datos$Age_cat<-relevel(datos$Age_cat, ref="child")
 
 # Gráfica
-ggplot(data = datos,aes(x=Age_cat,fill=Survived))+geom_bar(position="fill")+ylab("Frecuency")+xlab("Sex")
+ggplot(data = datos,aes(x=Age_cat,fill=Survived))+geom_bar(position="fill")+ylab("Frecuencia")+xlab("Age")
 
 ```
 
@@ -275,7 +270,7 @@ barplot(
   main = 'Barplot variable Sibsp',
   col = 'Salmon',
   xlab = 'Sibsp',
-  ylab = 'frecuency'
+  ylab = 'Frecuencia'
 )
 ```
 
@@ -287,7 +282,7 @@ Si se hace un gráfica de cada grupo con respecto a la supervivencia se observa 
 
 datos$SibSp<-as.factor(datos$SibSp)
 
-ggplot(data = datos,aes(x=as.factor(SibSp),fill=Survived))+geom_bar(position="fill")+ylab("Frecuency")
+ggplot(data = datos,aes(x=as.factor(SibSp),fill=Survived))+geom_bar(position="fill")+ylab("Frecuencia")+xlab("SibSp")
 ```
 
 Analizamos si la variable SibsSp tiene alguna relación con Sex y PClass.
@@ -297,14 +292,14 @@ library(gridExtra)
 ```
 
 ```{r}
-g1 <- ggplot(data = datos,aes(x=as.factor(SibSp),fill=Sex))+geom_bar(position="fill")+ylab("Frecuency")+xlab("SibsSp")
-g2 <- ggplot(data = datos,aes(x=as.factor(SibSp),fill=Pclass))+geom_bar(position="fill")+ylab("Frecuency")+xlab("SibsSp")
+g1 <- ggplot(data = datos,aes(x=as.factor(SibSp),fill=Sex))+geom_bar(position="fill")+ylab("Frecuencia")+xlab("SibsSp")
+g2 <- ggplot(data = datos,aes(x=as.factor(SibSp),fill=Pclass))+geom_bar(position="fill")+ylab("Frecuencia")+xlab("SibsSp")
 grid.arrange(g1, g2, ncol=1, nrow=2)
 ```
 
-Tras analizar los gráficos anteriores, vemos que la mayoría de los pasajeros que viajaban solos eran hombres y esto explica porque la tasa de supervivencia es inferior pese a ser el grupo con mayor proporción de pasajeros pese a ser uno de los grupos con más pasajeros en primera y segunda clase. Otro dato curioso es que las familias de más miebros tienen la tasa de supervivencia más baja, a su vez estos grupos pertenecen a tercera clase y en su mayoría eran hombres.
+Tras analizar los gráficos anteriores, vemos que la mayoría de los pasajeros que viajaban solos eran hombres y esto explica porque la tasa de supervivencia es inferior pese a ser el grupo con mayor proporción de pasajeros en primera y segunda clase. Otro dato curioso es que las familias de más miembros tienen la tasa de supervivencia más baja, a su vez estos grupos pertenecen a tercera clase y en su mayoría eran hombres.
 
-Para entender más los datos y la relación entre sus variables realizamos algunos test de chi-cuadrado entre la variable SibSp y Sexo, SibSp y Pclass y Sibsp y Survived para entender si estas son dependientes o no.
+Para entender más los datos y la relación entre sus variables realizamos algunos test de chi-cuadrado entre la variable **SibSp** y **Sex**, **SibSp** y **PClass** y **SibSp** y Survived para entender si estas son dependientes o no.
 
 ```{r}
 chisq.test(as.factor(SibSp), as.factor(Sex))
@@ -333,8 +328,8 @@ f.surnames <- sort(table(datos$surnames), decreasing = TRUE)[1:10]
 
 x <- barplot(f.surnames, xaxt = 'n', horiz = F,
              main = 'Surnames - Frecuencias absolutas',
-             xlab = 'surnames',
-             ylab = 'frecuencia',
+             xlab = 'Surnames',
+             ylab = 'Frecuencia',
              col = 'salmon')
 labs <- names(f.surnames)
 
@@ -350,7 +345,7 @@ En el gráfico anterior se han mostrado las 10 familias con más miembros en el 
 datos[datos$surnames=='Andersson' | datos$surnames=='Carter', c(4, 9)]
 ```
 
-Tras analizar estos datos, es posible sacar algunas conclusiones que explican la naturaleza de los datos. Por ejemplo, cuando dos o más personas tienen el mismo ticket y precio es que pertenecen  a la mismsa familia.
+Tras analizar estos datos, es posible sacar algunas conclusiones que explican la naturaleza de los datos. Por ejemplo, cuando dos o más personas tienen el mismo ticket y precio es que pertenecen  a la misma familia.
 
 ```{r}
 datos[datos$Ticket=='347082', c(4, 9)]
@@ -378,7 +373,7 @@ barplot(
   main = 'Barplot variable Parch',
   col = 'Salmon',
   xlab = 'Sibsp',
-  ylab = 'frecuencias',
+  ylab = 'Frecuencia',
   ylim = c(0,80)
 )
 ```
@@ -386,7 +381,7 @@ barplot(
 Si se hace un gráfica de cada grupo con respecto a la supervivencia se observa como existe una mayor proabilidad de supervivencia en  grupos de familías  de  1 a 3 miembros pese a qué la mayor cantidad de pasajeros a bordo del Titanic eran unifamiliares. Esto puede ser debido a qué era más probable encontrar que las familias tuvieran hijos o mujeres.
 
 ```{r}
-ggplot(data = datos,aes(x=Parch,fill=Survived))+geom_bar(position="fill")+ylab("Frecuency")
+ggplot(data = datos,aes(x=Parch,fill=Survived))+geom_bar(position="fill")+ylab("Frecuencia")
 ```
 
 Si la variable **SibSp** nos indica el número de conyuges o hermanos y la variable **Parch** nos indica el número de padres e hijos debe de haber una relación entre dichas variables.
@@ -399,15 +394,15 @@ Analizamos la distribución entre ambas variables.
 
 ```{r}
 g1 <- ggplot(datos, aes(x=factor(Parch)))+
-  geom_bar(stat="count", width=0.7, fill="steelblue")
+  geom_bar(stat="count", width=0.7, fill="steelblue")+xlab("Parch")+ylab("Número")
 
 g2 <- ggplot(datos, aes(x=factor(SibSp)))+
-  geom_bar(stat="count", width=0.7, fill="steelblue")
+  geom_bar(stat="count", width=0.7, fill="steelblue")+xlab("SibSp")+ylab("Número")
 
 grid.arrange(g1, g2, ncol=1, nrow=2)
 ```
 
-Hemos visto que ambas variables son dependientes y anteriormente hemos comprobado que SibSp tiene significancia entre sobrevivir o no. Para no solapar ambas variables en el algoritmo de predicción se crea una nueva variable que contenga el número de parientes la cual será la suma de ambas variables.
+Hemos visto que ambas variables son dependientes y anteriormente hemos comprobado que **SibSp** tiene significancia entre sobrevivir o no. Para no solapar ambas variables en el algoritmo de predicción se crea una nueva variable que contenga el número de parientes la cual será la suma de ambas variables.
 
 ```{r}
 # creamos la nueva variable
@@ -444,7 +439,8 @@ Analizamos la distribución de la variable.
 hist(Fare, col = 'darkslategray1',
      main = 'Histograma + densidad de la variable Fare',
      freq = FALSE,
-     xlab = 'Fare')
+     xlab = 'Fare',
+     ylab= "Densidad")
 lines(density(Fare), col = 'red', lwd='3')
 ```
 
@@ -529,7 +525,7 @@ Finalmente se observa que la probabilidad de supervivencia varia en función del
 
 ```{r grafica embarked }
 
-ggplot(data = datos,aes(x=Embarked,fill=Survived))+geom_bar(position="fill")+ylab("Frecuency")
+ggplot(data = datos,aes(x=Embarked,fill=Survived))+geom_bar(position="fill")+ylab("Frecuencia")
 
 
 ```
@@ -578,7 +574,7 @@ $$
 0.05 < 2*pnorm(z, lower.tail = F)
 ```
 
-Debido a que el p-valor es inferior al nivel de significancia fijado como $\alpha=0.05$ rechazamos la hipótesis nula a favor de la hipótesis alternativa y podemos considerar que los precios entre tener cabina informada o no son diferentes. Por lo tanto, trataremos aquellos registros cuya cabina no está infomrada que se consideren valores extremos como cabinas informadas. Para los que tengan cabina informada asumiremos que es correcto.
+Debido a que el p-valor es inferior al nivel de significancia fijado como $\alpha=0.05$ rechazamos la hipótesis nula a favor de la hipótesis alternativa y podemos considerar que los precios entre tener cabina informada o no, son diferentes. Por lo tanto, trataremos aquellos registros cuya cabina no está informada que se consideren valores extremos como cabinas informadas. Para los que tengan cabina informada asumiremos que es correcto.
 
 A continuación, queremos afirmar si existe alguna relación entre la variable Fare y los diferentes Embarked para entonces, categorizar la variable en dependencia de ellos.
 
