@@ -57,7 +57,7 @@ str(datos)
 summary(datos)
 ```
 
-Como se puede observar, existen dos variables que tienen un valor único para cada observación: **PassengerId** y **Name**. Estas variables no se tendrán en cuenta en el análisis ya que no dan información diferencial para calcular la probabilidad de que un pasejero sobreviva o no. Además, **ticket**, es una variable categórica con 681 niveles, lo cual hace dificil su integración en los análisis que se van a efectuar más abajo. Por el momento se mantienen estas variables ya que pueden ser de ayuda para algún tratamiento de datos, pero para no sobreespecializar el algoritmo a nivel de la identidad de los pasajeros (nos interesa entender el comportamiento de las variables más genéricas) no se tendrán en cuenta para el análisis y se procederá con su eliminación antes de comenzar los análisis.
+Como se puede observar, existen dos variables que tienen un valor único para cada observación: **PassengerId** y **Name**. Estas variables no se tendrán en cuenta en el análisis ya que no dan información diferencial para calcular la probabilidad de que un pasejero sobreviva o no. Por el momento se mantienen estas variables ya que pueden ser de ayuda para algún tratamiento de datos, pero para no sobreespecializar el algoritmo a nivel de la identidad de los pasajeros (nos interesa entender el comportamiento de las variables más genéricas) no se tendrán en cuenta para el análisis y se procederá con su eliminación antes de comenzar los análisis.
 
 El resto de variables, serán usadas para comprender la probabilidad de supervivencia. En primer lugar, se discretizarán las variables **Pclass** referente a la clase dodne viajó el pasajero, y **Survived** que se refiere a si sobrevivió o no, ya que ambas a pesar de estar en formato *int* se consideran categóricas.
 
@@ -260,43 +260,6 @@ library(DescTools)
 
 boxplot(datos$Fare, col="orange", xlab="Fare")
 ```
-En el diagrama de caja mostrado anteriormente, es posible ver un valor máximo extremo que debido a ser el mayor vamos a analizarlo de forma individual.
-
-```{r}
-subset(datos[datos$Fare == max(datos$Fare), ], select = c(PassengerId, Ticket, Cabin, Embarked, Fare))
-```
-
-Vemos que este valor coincide en 3 registros cuyo ticket es el mismo. Por lo tanto, estas personas viajaban juntas y estaban en una de las cabinas más caras. Además, podemos ver un valor incorrecto que es que el pasajero 259 viajaba sin cabina cuando no tiene sentido viendo los demás tickets. Por lo tanto, aprovechamos para corregir este error.
-
-```{r}
-datos[datos$PassengerId == 259, ]$Cabin = "with_cabin"
-```
-
-A continuación, buscamos si existen otros registros cuyos tickets sean iguales y el valor de Cabina es diferente.
-
-```{r TODO}
-tickets_check<-c()
-for (i in levels(datos$Ticket)){
- a <- length(unique(datos$Cabin[which(datos$Ticket==i)]))
- if(a>1) {
-   tickets_check <- append(tickets_check,i)
-   }
-}
-tickets_check
-
-subset(datos[datos$Ticket==tickets_check[1], ], select = c(PassengerId, Ticket, Cabin, Embarked, Fare))
-```
-
-Usamos el valor más común de la cabina para estos registros ya que es se considera que es el más correcto. Aquellos registros cuyo ticket sea igual con diferente cabina y tengan dos no se modifican para evitar introducir más errores en los datos.
-
-```{r}
-for (ticket in tickets_check) {
-  if (nrow(datos[datos$Ticket == ticket,]) > 2) {
-    most_common <- names(which.max(table(datos[datos$Ticket == ticket, ]$Cabin)))
-    datos[datos$Ticket==ticket, ]$Cabin = most_common
-  }
-}
-```
 
 Debido a la naturaleza de la variable **Fare**, predominan los precios bajos y, por lo tanto, sigue una distribución lognormal lo que va a provocar una gran cantidad de valores extremos los cuales están aceptados porque representan tickets más caros debido a las condiciones (cabina, embarque...). Mediante la  transformación de Box Cox se intenta mejorar la normalidad y homocedasticidad, lo que llevará a una menor proporción de valores extremos.
 
@@ -372,6 +335,26 @@ Teniendo en cuenta que el p-valor<0.05 se puede afimar que existe una dependenci
 datos$SibSp<-NULL
 datos$Parch<-NULL
 ```
+
+## 3.3. Comprobación de la variable Ticket
+
+Se cree que la información de la variable Ticket está implicita en la variable Fare ya que el precio de un Ticket es igual para todos ellos. Se analiza si esto es cierto para no tener en cuenta esta variable en el análisis.
+
+```{r}
+# comprobamos si existe alguna diferencia de precio para algún ticket cuyo valor es igual.
+tickets_check<-c()
+for (i in levels(datos$Ticket)){
+ a <- length(unique(datos$Fare[which(datos$Ticket==i)]))
+ if(a>1) {
+   tickets_check <- append(tickets_check,i)
+   }
+}
+tickets_check
+
+subset(datos[datos$Ticket==tickets_check[1], ], select = c(PassengerId, Ticket, Cabin, Embarked, Fare))
+```
+
+Se observa sólo un valor diferente con una variación mínima en la variable Fare. Por lo tanto, consideramos que la información de la variable **Ticket** ya está explicada en la variable **Fare** y, por lo tanto, no es necesaria para el análisis. Además, se considera más conveniente utilizar la variable **Fare** ya que no es identificadora y ayudará más a comprender la supervivencia de los pasajeros. 
 
 ```{r}
 # eliminamos las variables que no usaremos para el análisis
