@@ -7,3 +7,6 @@ Autores:
 - Aleix Cortina
 - Kilian Cañizares
 
+TODO> - imprimir el set de datos.
+ - escribir alguna conclusión más.
+ - preparar el github.

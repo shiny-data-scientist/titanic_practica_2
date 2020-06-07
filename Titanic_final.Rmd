@@ -44,7 +44,7 @@ Este es un conjunto de datos referente a los pasajeros del Titanic que se compon
  
 Con un número total de observaciones de 891.  
 
-El objetivo de la creación de este conjunto de datos es analizar si la probabilidad de supervicencia de un pasajero está condicionada por el resto de variables del conjunto de datos. Si bien el hecho de predecir la supervicencia en el naufragio del Titanic no es relevante en la actuaidad, las mejoras derivadas del entrenamiento de este tipo de algoritmos pueden tener aplicaciones importantes en áreas como la salud (i.e. predecir la mortalidad en función de hábitos y variables físicas del paciente), seguros (i.e. predecir el valor de un seguro en función de las características de un cliente), entre otras.  
+El objetivo de la creación de este conjunto de datos es analizar si la probabilidad de supervivencia de un pasajero está condicionada por el resto de variables del conjunto de datos. Si bien el hecho de predecir la supervivencia en el naufragio del Titanic no es relevante en la actuaidad, las mejoras derivadas del entrenamiento de este tipo de algoritmos pueden tener aplicaciones importantes en áreas como la salud (i.e. predecir la mortalidad en función de hábitos y variables físicas del paciente), seguros (i.e. predecir el valor de un seguro en función de las características de un cliente), entre otras.  
 
 ## 2.Integración y selección de los datos de interés a analizar
 
@@ -58,9 +58,9 @@ str(datos)
 summary(datos)
 ```
 
-Como se puede observar, existen dos variables que tienen un valor único para cada observación: **PassengerId** y **Name**. Estas variables no se tendrán en cuenta en el análisis ya que al ser variables con valor único, no dan información diferencial para calcular la probabilidad de que un pasejero sobreviva o no. Por el momento se mantienen estas variables ya que pueden ser de ayuda para algún tratamiento de datos, pero para no sobreespecializar el algoritmo a nivel de la identidad de los pasajeros (nos interesa entender el comportamiento de las variables más genéricas) no se tendrán en cuenta para el análisis y se procederá con su eliminación antes de comenzar.
+Como se puede observar, existen dos variables que tienen un valor único para cada observación: **PassengerId** y **Name**. Estas variables no se tendrán en cuenta en el análisis ya que al ser variables con valor único, no dan información diferencial para calcular la probabilidad de que un pasejero sobreviva o no. Por el momento se mantienen estas variables ya que pueden ser de ayuda para algún tratamiento de datos, pero para no sobre-especializar el algoritmo a nivel de la identidad de los pasajeros (nos interesa entender el comportamiento de las variables más genéricas) no se tendrán en cuenta para el análisis y se procederá con su eliminación antes de comenzar.
 
-El resto de variables serán usadas para comprender de que depende la probabilidad de supervivencia. En primer lugar, se discretizarán las variables **Pclass** referente a la clase dodne viajó el pasajero, y **Survived** que se refiere a si sobrevivió o no, ya que ambas a pesar de estar en formato *int* se consideran categóricas.
+El resto de variables serán usadas para comprender de que depende la probabilidad de supervivencia. En primer lugar, se van a discretizar las variables **Pclass** referente a la clase donde viajó el pasajero, y **Survived** que se refiere a si sobrevivió o no, ya que ambas a pesar de estar en formato *int* se consideran categóricas.
 
 ```{r datos que entran en el análisis }
 # Discretización de variables.
@@ -85,11 +85,11 @@ colSums(datos=="")
 colSums(datos==0)
 ```
 
-La variable **Age** contiene un total de 177 valores NA. Además, las variables **Cabin** y **Embarked** tienen un total de 687 y 2  valores vacios respectivamente. Por otro lado, los ceros pueden ser un valor aceptable en variables como **Survived** indicando que el pasajero no sobrevivió, en **SibSp** indicando el número de familiares o cónyugues, o en **Parch** indicando el número de padres e hijos. Sin embargo, los 15 valores 0 de la variable **Fare** carecen de sentido, así que serán tratados como valores pérdidos. 
+La variable **Age** contiene un total de 177 valores NA. Además, las variables **Cabin** y **Embarked** tienen un total de 687 y 2  valores vacios respectivamente. Por otro lado, los ceros pueden ser un valor aceptable en variables como **Survived** indicando que el pasajero no sobrevivió, en **SibSp** indicando el número de familiares o cónyugues, o en **Parch** indicando el número de padres e hijos. Sin embargo, los 15 valores 0 de la variable **Fare** carecen de sentido, así que serán tratados como valores perdidos. 
 
 #### 3.1.1. Valores vacíos y 0
 Las variables a tratar en este apartado son **Fare**, **Cabin** y **Embarked**. 
-Respecto a la variable **Cabin**, proporciona información de la cabina donde se alojó un pasajero. Los valores vacíos corresponden a pasajeros que no se han alojado en cabina. El hecho que esté alojado en cabina debería de estar relacionado con la clase en al que se aloja el pasajero, y por lo tanto seguramente con la probabilidad de supervivencia. Primero se comprobará mediante un test *Chi-cuadrado* si existe o no dependencia entre tener asigando un número de cabina y la supervicencia mediante el siguiente test de hipótesis: 
+Respecto a la variable **Cabin**, proporciona información de la cabina donde se alojó un pasajero. Los valores vacíos corresponden a pasajeros que no se han alojado en cabina. El hecho que esté alojado en cabina debería de estar relacionado con la clase en al que se aloja el pasajero, y por lo tanto seguramente con la probabilidad de supervivencia. Primero se comprobará mediante un test *Chi-cuadrado* si existe o no dependencia entre tener asignado un número de cabina y la supervivencia mediante el siguiente test de hipótesis: 
 
 $$
 \text{Hipótesis nula. } H_0 \text{: Las variables son independientes.}
@@ -309,7 +309,7 @@ hist(x, main="", xlab = "SibSp", col="orange")
 hist(y, main="", xlab = "Parch", col="orange")
 ```
 
-Si la variable **SibSp** nos indica el número de conyuges o hermanos y la variable **Parch** nos indica el número de padres e hijos debe de haber una relación entre dichas variables.
+Si la variable **SibSp** nos indica el número de conyugales o hermanos y la variable **Parch** nos indica el número de padres e hijos debe de haber una relación entre dichas variables.
 
 ```{r SibSp y Parch}
 
@@ -329,7 +329,7 @@ chisq.test(datos$Parents, datos$Survived)
 
 ```
 
-Teniendo en cuenta que el p-valor<0.05 se puede afimar que existe una dependencia entre la nueva variable **Parents** y la supervivencia.Finalmente se eliminan las variables **SibSp** y **Parch** antes de iniciar el análisi de los datos. 
+Teniendo en cuenta que el p-valor<0.05 se puede afirmar que existe una dependencia entre la nueva variable **Parents** y la supervivencia.Finalmente se eliminan las variables **SibSp** y **Parch** antes de iniciar el análisis de los datos. 
 
 
 ```{r version final de los datos }
@@ -339,7 +339,7 @@ datos$Parch<-NULL
 
 ## 3.3. Comprobación de la variable Ticket
 
-Se cree que la información de la variable **Ticket** está implicita en la variable **Fare** ya que el precio de un mismo número de ticket debría de tener igual valor. Para comprobar esta posibilidad se realiza el siguiente análisis.
+Se cree que la información de la variable **Ticket** está implícita en la variable **Fare** ya que el precio de un mismo número de ticket debería de tener igual valor. Para comprobar esta posibilidad se realiza el siguiente análisis.
 
 ```{r}
 # comprobamos si existe alguna diferencia de precio para algún ticket cuyo valor es igual.
@@ -375,7 +375,7 @@ attach(datos)
 
 ## 4.1. Selección de los grupos de datos que se quieren analizar/comparar (Planificación de los análisis)
 
-En primer lugar, debido a qué el objetivo del análisis es entender qué variables influyen y en qué medida en la supervivencia, se van a realizar contrastes de hipótesis para medir la dependencia de las variables con respecto a la supervivencia. En el caso de las variables categóricas se realizarán test *Chi-cuadrado* de la sigueinte manera: 
+En primer lugar, debido a qué el objetivo del análisis es entender qué variables influyen y en qué medida en la supervivencia, se van a realizar contrastes de hipótesis para medir la dependencia de las variables con respecto a la supervivencia. En el caso de las variables categóricas se realizarán test *Chi-cuadrado* de la siguiente manera: 
 
 - **PClass** vs **Survived**
 - **Sex** vs **Survived**
@@ -385,15 +385,15 @@ En primer lugar, debido a qué el objetivo del análisis es entender qué variab
 - **Cabin** vs **Survived**
 - **Embarked** vs **Survived**
 
-Además de ver si estas variables son dependientes o no, se va a calcular el estadístico Gamma de Goodman Kruskal que nos da una idea del grado de dependencia de éstas. Los valores estan comprendidos entre -1 y 1, con el signo indicando si la dependencia es positva o negativa y el valor absoluto la fuerza de esta. Los valores cercanos a 0 indican que las dos variables son independientes. 
+Además de ver si estas variables son dependientes o no, se va a calcular el estadístico Gamma de Goodman Kruskal que nos da una idea del grado de dependencia de éstas. Los valores están comprendidos entre -1 y 1, con el signo indicando si la dependencia es positiva o negativa y el valor absoluto la fuerza de esta. Los valores cercanos a 0 indican que las dos variables son independientes. 
 
 Por otro lado, en la variable continua **Fare** se hará un contraste de medias respecto a **Survived** con el objetivo de entender si un precio diferente de ticket influye en la probabilidad de supervivencia. 
 
-Una vez comprendida la relación de cada variable con la superviencia, se va a utilizar esta información para saber que variables van a ser usadas en los algoritmos de predicción. En concreto se van a aplicar dos algoritmos supervisados de clasificación para entrenar un nodelo  que nos permita predecir la probabilidad de supervivencia de un pasajero en función de los atributos que disponemos. Estos algoritmos son: 
+Una vez comprendida la relación de cada variable con la supervivencia, se va a utilizar esta información para saber que variables van a ser usadas en los algoritmos de predicción. En concreto se van a aplicar dos algoritmos supervisados de clasificación para entrenar un modelo  que nos permita predecir la probabilidad de supervivencia de un pasajero en función de los atributos que disponemos. Estos algoritmos son: 
 
-- Árbol de decisión: Es un algoritmo que va a intentar subdividir el espacio de entrada de datos para generar regiones disjuntas. Cada una de estas regiones estará asociada a los atributos de entrada y tendrá asociada una probabilidad de supervivencia[@roig2018mineria]. 
+- Árbol de decisión: Es un algoritmo que va a intentar subdividir el espacio de entrada de datos para generar regiones disyuntas. Cada una de estas regiones estará asociada a los atributos de entrada y tendrá asociada una probabilidad de supervivencia[@roig2018mineria]. 
 
-- RandomForests: Es un algoritmo que usa varios clasificadores basados en árboles de decisión para mejorar la predicción. Se construye cada árbol con m predictores escogidos aleatoriamente, y se promedia el conjunto de modelos[@roig2018mineria]. 
+- RandomForests: Es un algoritmo que usa varios clasificadores basados en árboles de decisión para mejorar la predicción. Se construye cada árbol con m predictores escogidos de forma aleatoria, y se promedia el conjunto de modelos[@roig2018mineria]. 
 
 
 ## 4.2. Comprobación de la normalidad y homogeneidad de la varianza
@@ -510,7 +510,7 @@ gamma_matrix<-matrix(
 
 gamma_matrix
 ```
-Para todas las variables el $p-valor < \alpha = 0.05$, luego se rechaza la hipótesis nula a favor de la alternativa. Por lo tanto, todas estas variables son dependientes por lo que todas tienen un peso en la probabilidad de sobrevivir. Además se observa mediante el test Gamma que dicha fuerza es mayor en las variables **Sex**, **Cabin** y **Pclass** y menor en **Parents**, **Embarked** y **Age**. El hecho que el signo sea negativo nos indica que la probabilidad de sobrevivir disminuye a medida que avanzamos en los diferentes niveles del factor y esto depende de como están o han sido reordenados con las funciones *relevel()* o *ordered*. Dicha relación se verá graficamente en el apartado 5 del presente informe, sin embargo, a modo explicativo de las variables que presentan una mayor fuerza en la dependencia decir que el hecho de ser mujer, viajar en cabina y en primera clase aumenta las probabilidades de sobrevivir.  
+Para todas las variables el $p-valor < \alpha = 0.05$, luego se rechaza la hipótesis nula a favor de la alternativa. Por lo tanto, todas estas variables son dependientes por lo que todas tienen un peso en la probabilidad de sobrevivir. Además se observa mediante el test Gamma que dicha fuerza es mayor en las variables **Sex**, **Cabin** y **Pclass** y menor en **Parents**, **Embarked** y **Age**. El hecho que el signo sea negativo nos indica que la probabilidad de sobrevivir disminuye a medida que avanzamos en los diferentes niveles del factor y esto depende de como están o han sido ordenados con las funciones *relevel()* o *ordered*. Dicha relación se verá gráficamente en el apartado 5 del presente informe, sin embargo, a modo explicativo de las variables que presentan una mayor fuerza en la dependencia decir que el hecho de ser mujer, viajar en cabina y en primera clase aumenta las probabilidades de sobrevivir.  
 
 #### 4.3.1.2. Variables continuas.
 
@@ -636,7 +636,7 @@ predict_random_forest = predict(rf, newdata=X_test)
 confusionMatrix(predict_random_forest, y_test)
 ```
 
-Se observa cómo la presición ha dissminuido levemente  con respecto al arbol de decisión (i.e. de 85.5% a 84.9%) . Por lo tanto, nuestro set de datos se explica (al menos para este orden aleatorio de los datos) peor la superviviencia que el árbol de decisión aplicado anteriormente.
+Se observa cómo la precisión ha disminuido levemente  con respecto al árbol de decisión (i.e. de 85.5% a 84.9%) . Por lo tanto, nuestro set de datos se explica (al menos para este orden aleatorio de los datos) peor la supervivencia que el árbol de decisión aplicado anteriormente.
 
 ## 5. Representación de los resultados a partir de tablas y gráficas
 
@@ -662,9 +662,9 @@ p6<-ggplot(data=datos, aes(x=Embarked,fill=Survived))+geom_bar(position="fill")+
 ggarrange(p1, p2,p3,p4,p5,p6, ncol = 3 , nrow = 2,  common.legend = TRUE, legend="bottom")
 
 ```
-Como ya se avanzó en el apartado anterior el sexo, el hecho de tener cabino o no y la clase donde se compró el billete están relacionados con la probabilidad de sobrevivir. Ser mujer, y alojarse en cabina en primera clase aumentan estas posibilidades. Por contra, ser hombre, estar en tercera clase y no tener cabina asignada la disminuyen. Aunque en menor medida el  número de familiares, el sitio de embarque y la edad tambien presentan una dependencia con la probabilidad de sobrevivir aunque más debil. Un número de familiares entre 1 y 3 aumentan la posbilidad de supervivencia, disminuyendo para familias mas grandes y en el caso que se viaje solo. El hecho de ser niño tambien aumentan la probilidad de supervivencia, así como el sitio donde se embarcó, siendo Cherbourg ("C") el lugar de embarque  que las aumenta frente a Queenstown ("Q") y Southampton ("S").  
+Como ya se avanzó en el apartado anterior el sexo, el hecho de tener cabino o no y la clase donde se compró el billete están relacionados con la probabilidad de sobrevivir. Ser mujer, y alojarse en cabina en primera clase aumentan estas posibilidades. Por contra, ser hombre, estar en tercera clase y no tener cabina asignada la disminuyen. Aunque en menor medida el  número de familiares, el sitio de embarque y la edad también presentan una dependencia con la probabilidad de sobrevivir aunque más débil. Un número de familiares entre 1 y 3 aumentan la posibilidad de supervivencia, disminuyendo para familias mas grandes y en el caso que se viaje solo. El hecho de ser niño también aumentan la probabilidad de supervivencia, así como el sitio donde se embarcó, siendo Cherbourg ("C") el lugar de embarque  que las aumenta frente a Queenstown ("Q") y Southampton ("S").  
 
-Estas variables pueden tener interacción entre ellas, influyendo alguno de los niveles de unas en las otras.Por ejemplo, es asumible pensar que el hecho de tener cabina o no , esta asociado al tipo de clase en que se aloja el pasajero. Por ello ejecutar algoritmos de clasificación ayudará a mejorar la interpretación de los resultados ya que teniendo en cuenta la interacción entre variables darán información de cuales de estas variables sin más importantes a la hora de determinar la probabilidad de supervivencia. 
+Estas variables pueden tener interacción entre ellas, influyendo alguno de los niveles de unas en las otras. Por ejemplo, es asumible pensar que el hecho de tener cabina o no , esta asociado al tipo de clase en que se aloja el pasajero. Por ello ejecutar algoritmos de clasificación ayudará a mejorar la interpretación de los resultados ya que teniendo en cuenta la interacción entre variables darán información de cuales de estas variables sin más importantes a la hora de determinar la probabilidad de supervivencia. 
 
 ### 5.2. Representación del árbol de decisión
 
@@ -682,28 +682,27 @@ Se realiza un gráfico del árbol de decisión para visualizar como las variable
 rpart.plot(arbol_1, type = 2)
 ```
 
-Como se puede observar en el árbol generado, la primera variable a partir de la cual se realiza una buena discriminación es **Sex**. Dependiendo de cada sexo, se utilizan las varibles **Cabin** y **Pclass** para determinar si una persona sobrevive o no. Despues de estas tres variables,  el resto de variables han sido utilizadas para tomar la decisión de la supervivencia o no de los pasajeros. La mayor probabilidad de supervivencia se da con un 94% cuando se es mujer y se aloja en clase 1 o 2.
+Como se puede observar en el árbol generado, la primera variable a partir de la cual se realiza una buena discriminación es **Sex**. Dependiendo de cada sexo, se utilizan las variables **Cabin** y **Pclass** para determinar si una persona sobrevive o no. Después de estas tres variables,  el resto de variables han sido utilizadas para tomar la decisión de la supervivencia o no de los pasajeros. La mayor probabilidad de supervivencia se da con un 94% cuando se es mujer y se aloja en clase 1 o 2.
 
 ### 5.3. Representación del Random Forest
 
-El algoritmo de randomforest genera muchos árboles de decisión de forma aleatoria. Su interpretación es más complicada que el árbol de decisión, pero nos aporta información adicional ya que se generan multiples árboles con entrada de variables aleatorias seleccionando los que mejoran la precisión. Por ello,  nos da información de la importancia de las variables en determinar la probabilidad de supervivencia. Sin embargo, debido a su naturaleza puede provocar un sobreajuste de los datos, lo que reduce la precisión del conjunto test. A continuación se va a representar el número de veces que una variable ha sido raiz del árbol, frente al promedio de la profundidad de  la primera vez que se separa. 
+El algoritmo de randomforest genera muchos árboles de decisión de forma aleatoria. Su interpretación es más complicada que el árbol de decisión, pero nos aporta información adicional ya que se generan múltiples árboles con entrada de variables aleatorias seleccionando los que mejoran la precisión. Por ello,  nos da información de la importancia de las variables en determinar la probabilidad de supervivencia. Sin embargo, debido a su naturaleza puede provocar un sobreajuste de los datos, lo que reduce la precisión del conjunto test. A continuación se va a representar el número de veces que una variable ha sido raiz del árbol, frente al promedio de la profundidad de  la primera vez que se separa. 
 
 ```{r}
 plot_multi_way_importance(rf, size_measure = "no_of_nodes")
 ```
 
-Las variables más utilizadas cómo raíz y con una menor promedio de la profundidad de  la primera vez que se separa  son aquellas más explicativas o discrimitatorias. Como se puede observar, la variable **Sex** es la más utilizada y coincide con el árbol de decisión. Las variables **Fare** y **Cabin** también determinan fuertemente la supervivenvia o no de los pasajeros, y ne menor medida **Pclas** y **Parents**. En cambio,  las variable **Age** y **Embarked** son poco deteminnantes de la supervivencia del pasajero.
-
-NOTA : ESTO NO LO ENTIENDO MUY BIEN. Esto puede ser debido a que la mayoría de los registros son adultos o no identificados donde hemos visto que esta variable no tenía mucho peso, en cambio, era bastante descriptiva para los menores lo que refuerza el conocimiento de los datos.
+Las variables más utilizadas cómo raíz y con una menor promedio de la profundidad de la primera vez que se separa  son aquellas más explicativas o discriminatorias. Como se puede observar, la variable **Sex** es la más utilizada y coincide con el árbol de decisión. Las variables **Fare** y **Cabin** también determinan fuertemente la supervivencia o no de los pasajeros, y en menor medida, **Pclas** y **Parents**. En cambio,  las variable **Age** y **Embarked** son poco determinantes de la supervivencia del pasajero. El caso de la variable **Age** refuerza el análisis realizado anteriormente dónde se ha contemplado que la mayoría de los pasajeros son adultos y para estos casos no era muy relevante.
 
 # 6. Conclusiones
-Se han preprocesado las variables del juego de datos del Titanic con el objetivo de estdiar que determina la proababilidad de sobrevivir y  mejorar la predicción de los algoritmos de clasificación. No se usaron las variables **PassangerId** y **Name** por ser variables únicas. Además la variable **Ticket** se descartó por estar implícita su información en la variable **Fare**. 
 
-Se usaron para el análisis final un total de 6 variables discretas (i.e. **Pclass**, **Sex**, **Parents**, **Embarked**, **Cabin** y **Age**) y 1 continua (i.e. **Fare**). No hubo ningún preprocesamiento, a parte de la discretización mediante la funcón *as.factor*, en las variables **Pclass** y  **Sex**. Por su parte la variable **Parents** es el resultado de la suma de las variables **SibSp** y **Parch** las cuales tampooco fueron objeto de preprocesamiento.
+Se han procesado las variables del juego de datos del Titanic con el objetivo de estudiar que determina la probabilidad de sobrevivir y  mejorar la predicción de los algoritmos de clasificación. No se han utilizado las variables **PassangerId** y **Name** por ser variables únicas. Además la variable **Ticket** se descartó por estar implícita su información en la variable **Fare**. 
 
-Las variables **Age**,**Cabin**, **Embarked** y **Fare** presentaron valores **NA**, vacíos o 0. Debido al gran número de valores *NA*, la variable **Age** fue discretizada en función de si estaba ímplicita o no la edad en el registro y de un humbral que era óptimo entre  la probablidad de supervivencia de los individuos más jóvenes y el número de casos que comprendia dicha población. En la variable **Cabin** fue discritezada en función de si tenía (i.e. *with_cabin*) o si no tenía (i.e. *whitout_cabin*) valor asociado. Por su parte, se usaron el conjunto de variables **Fare**, **Cabin**, **Embarked** y **Pclass** para imputar mediante *kNN()* los valores faltantes de la variable **Fare** que eran 0 y **Embarked** que eran faltantes, ya que se considera que este grupo de variables tienen una relación implicita que las hace adecuadas para llevar a cabo dicha imputación. Por último, la única variable continua del juego de datos **Fare**, no pasó los test estadísticos de normalidad y homocestacidad. Sim embargo, como contiene más de 30 observaciones y en base al Teorema del Limite Central, se considera que tiene una distribución que tiennde a la normalidad y por eso motivo fue utilizada. 
+Se usaron para el análisis final un total de 6 variables discretas (i.e. **Pclass**, **Sex**, **Parents**, **Embarked**, **Cabin** y **Age**) y 1 continua (i.e. **Fare**). No hubo ningún preprocesamiento, a parte de la discretización mediante la funcón *as.factor*, en las variables **Pclass** y  **Sex**. Por su parte la variable **Parents** es el resultado de la suma de las variables **SibSp** y **Parch** las cuales tampoco fueron objeto de preprocesamiento.
 
-La precisisón de los algoritmos de clasificación se considera buena al ronndar en ambos casos, arbol de de decisión y randomForest, el 85% en el conjunto de test. Este hecho, conjuntamente con la confrontación de cada variable individualmente con la supervivencia nos permite poder evaluar que caracteristicas de cada pasejor determinan su probabilidad de supervivencia. Se observó que el sexo, el hecho de viajar en cabina y la clase determinan mayormente la probabilidad de supervivencia, aumentando considerablemente al ser mujer y  viajando en primera o segunda clase en cabina. EL hecho de viajar en cabina y en clases superiores aumenta considerablemnte el precio del ticket (i.e. **Fare**) estando por lo tanto esta variable intimamente ligada a la probabilidad de supervivencia. Por su parte, el numero de parientes, el sitio de embarque y la edad, aunque influyen en la proabilidad de sobrevivir, lo hacen de una manera menor.  
+Las variables **Age**,**Cabin**, **Embarked** y **Fare** presentaron valores **NA**, vacíos o 0. Debido al gran número de valores *NA*, la variable **Age** fue discretizada en función de un umbral óptimo que diferencia entre la probabilidad de supervivencia de los individuos más jóvenes y el número de casos que compendia dicha población. En la variable **Cabin** fue discretizada en función de si tenía (i.e. *with_cabin*) o si no tenía (i.e. *whitout_cabin*) valor asociado. Por su parte, se usaron el conjunto de variables **Fare**, **Cabin**, **Embarked** y **Pclass** para imputar mediante *kNN()* los valores perdidos de la variable **Fare** (de valor 0) y **Embarked** que eran faltantes, ya que se considera que este grupo de variables tienen una relación que las hace adecuadas para llevar a cabo dicha imputación. Por último, la única variable continua del juego de datos **Fare**, no pasó los test estadísticos de normalidad y homocestacidad. Sim embargo, como contiene más de 30 observaciones y en base al Teorema del Limite Central, se considera que tiene una distribución que tiende a la normalidad y por eso motivo fue utilizada. 
+
+La precisión de los algoritmos de clasificación se considera buena al rondar en ambos casos, árbol de decisión y randomForest, el 85% en el conjunto de test. Este hecho, conjuntamente con la confrontación de cada variable individualmente con la supervivencia nos permite poder evaluar que características de cada pasajero determinan su probabilidad de supervivencia. Se observó que el sexo, el hecho de viajar en cabina y la clase determinan mayormente la probabilidad de supervivencia, aumentando considerablemente al ser mujer y viajando en primera o segunda clase en cabina. EL hecho de viajar en cabina y en clases superiores aumenta considerablemente el precio del ticket (i.e. **Fare**) estando, por lo tanto, esta variable relacionada ligada a la probabilidad de supervivencia. Por su parte, el numero de parientes, el sitio de embarque y la edad, aunque influyen en la probabilidad de sobrevivir, lo hacen de una manera menor.  
 
 # 7. Contribuciones
 
