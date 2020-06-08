@@ -3,8 +3,6 @@ title: "Titanic2"
 author: "Aleix Cortina, Kilian Cañizares"
 date: "5/8/2020"
 output:
-  pdf_document:
-    toc: yes
   html_document:
     toc :  yes
 bibliography: scholar.bib
