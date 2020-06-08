@@ -1,6 +1,12 @@
 # Hello!
 
-Este repositorio recoge la práctica 2 de la asignatura de Tipología de datos de la UOC.
+Este repositorio contiene la limpieza y análisis de los datos del titanic obtenidos de la [competición de kaggle](https://www.kaggle.com/c/titanic).
+
+## Ficheros
+
+Los ficheros que se encuentran en este repositorio son los siguientes:
+
+-  
 
 Autores: 
 

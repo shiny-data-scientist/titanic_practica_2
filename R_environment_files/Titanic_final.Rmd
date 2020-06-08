@@ -3,6 +3,8 @@ title: "Titanic2"
 author: "Aleix Cortina, Kilian Cañizares"
 date: "5/8/2020"
 output:
+  pdf_document:
+    toc: yes
   html_document:
     toc :  yes
 bibliography: scholar.bib
@@ -50,7 +52,7 @@ El objetivo de la creación de este conjunto de datos es analizar si la probabil
 
 ```{r carga de datos}
 # Carga del juego de datos
-datos<-read.csv("train.csv", sep = ",", header = TRUE)
+datos<-read.csv("../data/train.csv", sep = ",", header = TRUE)
 
 # Estructura de los datos
 str(datos)
@@ -359,7 +361,7 @@ Se observa que solo un número de ticket presenta valores diferentes en la varia
 
 ```{r}
 # imprimos le fichero después de las modificaciones realizadas.
-write.csv(datos, './titanic_clean_data.csv', row.names = F)
+write.csv(datos, '../data/titanic_clean_data.csv', row.names = F)
 ```
 
 
