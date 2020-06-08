@@ -5,6 +5,8 @@ date: "5/8/2020"
 output:
   html_document:
     toc :  yes
+  pdf_document:
+    toc :  yes
 bibliography: scholar.bib
 ---
 
@@ -19,34 +21,34 @@ setwd("./")
 ```
 
 
-## 1. Descripción del Dataset
+# 1. Descripción del Dataset
 
 En esta práctica se va a analizar el juego de datos del Titanic que se puede encontrar en:  
 
 https://www.kaggle.com/c/titanic  
 
-y cuyos datos se encuentran en el fichero "train.csv". 
+y cuyos datos se encuentran en el fichero *"train.csv"*. 
 
 Este es un conjunto de datos referente a los pasajeros del Titanic que se compone de un total de 12 variables que a continuación se describen: 
 
-- **PassagerId**: Identifica a cada pasejero por un identificador. Formato entero.   
-- **Survived**: Especifica si un pasajero sobrevivió (1) o no (0). Formato entero.  
+- **PassagerId**: Identifica a cada pasejero por un identificador. Formato entero.
+- **Survived**: Especifica si un pasajero sobrevivió (1) o no (0). Formato entero.
 - **Pclass**: Indica la clase en que un pasajero viajaba. Formato entero. 
-- **Name**: Nombre del pasajero. Formato factor. 
-- **Sex**: Sexo del pasajero. Formato factor.  
-- **Age**: Edad del pasajero en años. Formato numérico. 
-- **SibSp**: Número de familiares o cónyugues a bordo. Formato entero.  
-- **Parch**: Número padres e hijos a bordo. Formato entero. 
-- **Ticket**. Número de ticket del pasajero. Formato factor. 
-- **Fare**: Precio del ticket en dolares. Formato numérico. 
-- **Cabin**: Número de cabina del pasajero. Formato factor.  
-- **Embarked**: Lugar de embarque del pasajero. Formato factor. 
+- **Name**: Nombre del pasajero. Formato factor.
+- **Sex**: Sexo del pasajero. Formato factor.
+- **Age**: Edad del pasajero en años. Formato numérico.
+- **SibSp**: Número de familiares o cónyugues a bordo. Formato entero.
+- **Parch**: Número padres e hijos a bordo. Formato entero.
+- **Ticket**. Número de ticket del pasajero. Formato factor.
+- **Fare**: Precio del ticket en dolares. Formato numérico.
+- **Cabin**: Número de cabina del pasajero. Formato factor.
+- **Embarked**: Lugar de embarque del pasajero. Formato factor.
  
-Con un número total de observaciones de 891.  
+Con un número total de 891 observaciones.  
 
-El objetivo de la creación de este conjunto de datos es analizar si la probabilidad de supervivencia de un pasajero está condicionada por el resto de variables del conjunto de datos. Si bien el hecho de predecir la supervivencia en el naufragio del Titanic no es relevante en la actuaidad, las mejoras derivadas del entrenamiento de este tipo de algoritmos pueden tener aplicaciones importantes en áreas como la salud (i.e. predecir la mortalidad en función de hábitos y variables físicas del paciente), seguros (i.e. predecir el valor de un seguro en función de las características de un cliente), entre otras.  
+El objetivo de este conjunto de datos es analizar que determina la probabilidad de supervivencia de un pasajero. Si bien el hecho de predecir la supervivencia en el naufragio del Titanic no es relevante en la actuaidad, las mejoras derivadas del entrenamiento de este tipo de algoritmos pueden tener aplicaciones importantes en áreas como la salud (i.e. predecir la mortalidad en función de hábitos y variables físicas del paciente), seguros (i.e. predecir el valor de un seguro en función de las características de un cliente), entre otras.  
 
-## 2.Integración y selección de los datos de interés a analizar
+# 2. Integración y selección de los datos de interés a analizar
 
 ```{r carga de datos}
 # Carga del juego de datos
@@ -58,7 +60,7 @@ str(datos)
 summary(datos)
 ```
 
-Como se puede observar, existen dos variables que tienen un valor único para cada observación: **PassengerId** y **Name**. Estas variables no se tendrán en cuenta en el análisis ya que al ser variables con valor único, no dan información diferencial para calcular la probabilidad de que un pasejero sobreviva o no. Por el momento se mantienen estas variables ya que pueden ser de ayuda para algún tratamiento de datos, pero para no sobre-especializar el algoritmo a nivel de la identidad de los pasajeros (nos interesa entender el comportamiento de las variables más genéricas) no se tendrán en cuenta para el análisis y se procederá con su eliminación antes de comenzar.
+Como se puede observar, existen dos variables que tienen un valor único para cada observación: **PassengerId** y **Name**. Estas variables no se tendrán en cuenta en el análisis ya que al ser variables con valor único, no dan información diferencial para calcular la probabilidad de que un pasejero sobreviva. Por el momento se mantienen estas variables ya que pueden ser de ayuda para algún tratamiento de datos, pero para no sobre-especializar el algoritmo a nivel de la identidad de los pasajeros (nos interesa entender el comportamiento de las variables más genéricas) no se tendrán en cuenta para el análisis y se procederá con su eliminación antes de comenzar.
 
 El resto de variables serán usadas para comprender de que depende la probabilidad de supervivencia. En primer lugar, se van a discretizar las variables **Pclass** referente a la clase donde viajó el pasajero, y **Survived** que se refiere a si sobrevivió o no, ya que ambas a pesar de estar en formato *int* se consideran categóricas.
 
@@ -68,11 +70,11 @@ datos$Survived<-as.factor(datos$Survived)
 datos$Pclass<-as.factor(datos$Pclass)
 ```
 
-## 3. Limpieza de datos
+# 3. Limpieza de datos
 
 Es este apartado, además de limpiar los datos, se van a efectuar transformaciones en las variables para optimizar su uso en el análisis.
 
-### 3.1. Ceros, elementos vacios y NA
+## 3.1. Ceros, elementos vacios y NA
 Para evaluar la presencia de NA,  elementos vacíos o ceros,  se ejecutan las siguientes rutinas 
 ```{r ceros o elementos vacios }
 # Presencia de valores NA
@@ -91,10 +93,16 @@ La variable **Age** contiene un total de 177 valores NA. Además, las variables 
 Las variables a tratar en este apartado son **Fare**, **Cabin** y **Embarked**. 
 Respecto a la variable **Cabin**, proporciona información de la cabina donde se alojó un pasajero. Los valores vacíos corresponden a pasajeros que no se han alojado en cabina. El hecho que esté alojado en cabina debería de estar relacionado con la clase en al que se aloja el pasajero, y por lo tanto seguramente con la probabilidad de supervivencia. Primero se comprobará mediante un test *Chi-cuadrado* si existe o no dependencia entre tener asignado un número de cabina y la supervivencia mediante el siguiente test de hipótesis: 
 
+
+Hipótesis nula. H~0~: Las variables son independientes  
+Hipótesis alterna. H~1~: las variables  no son independientes  
+
+
+
 $$
-\text{Hipótesis nula. } H_0 \text{: Las variables son independientes.}
+\text{Hipótesis nula. } H_0 \text{: Las variables son independientes.}  
 \\
-\text{Hipótesis alternativa. } H_1 \text{: Las variables  no son independientes.}
+\text{Hipótesis alternativa. } H_1 \text{: Las variables  no son independientes.}  
 $$
 
 
@@ -171,18 +179,19 @@ datos$Embarked<-drop.levels(datos$Embarked)
 remove(datos_a_usar, datos_imputados, index_imputados_embarked)
 ```
 
-#### 3.1.2. Valores NA
+### 3.1.2. Valores NA
 
 Existen un total de 177 valores NA que se han de estudiar para  tomar una decisión a cerca de su tratamiento. Debido al gran numero con respecto al total (177 sobre 891) no se considera una buena opción eliminar los casos. Por lo tanto, primero se evaluará si dichos valores (nulos) tienen una relación con el hecho que el indidividuo sobreviva o no. Anterioremente, se ha visto que la clase determina en cierto modo las proabibilidades de sobrevivir o no, y posiblemente el hecho de disponer o no de la edad puede depender de la clase. Para ver si hay o no dependencia entre **Survived** y **Age** primero se categorizará la variable **Age** en función de si se especifica o no la edad, para posteriomente hacer un test *Chi-cuadrado* de dependencia de variables mediante la función `chisq.test()` donde se contrastan las siguiente hipótesis:
 
 $$
-\text{Hipótesis nula. } H_0 \text{: Las variables son independientes.}
+\text{Hipótesis nula. } H_0 \text{: Las variables son independientes.}  
 \\
-\text{Hipótesis alternativa. } H_1 \text{: Las variables  no son independientes.}
+\text{Hipótesis alternativa. } H_1 \text{: Las variables  no son independientes.}  
 $$
 ```{r variable Age valores no presentes, message = FALSE }
 
-edad_presente <- sapply(datos$Age, function (age) if (is.na(age)) "edad_no_especificada" else "edad_especificada")
+edad_presente <- sapply(datos$Age, function (age) if (is.na(age))
+                        "edad_no_especificada" else "edad_especificada")
 
 # Creación de tabla de contingencia 
 table_prop<-table(edad_presente,datos$Survived)
@@ -211,7 +220,8 @@ ggplot(data = age_survived_with_specified_age,
        )+geom_histogram(bins = 80)+ylab("Counts")+xlab("Age")
 
 ```
-En el histograma de la variable **age** junto con la probabilidad de supervivencia es posible observar que a menos edad mayor tasa de supervivencia. Por lo tanto, nos encontramos ante un escenario dónde sabemos que la edad no especificada es dependiente con la variable **Survived**. Además, pertenecer al rango de menos edad significa tener más probabilidad de sobrevivir. Por lo tanto, para discretizar la variable se ha de escoger un valor óptimo que discretice la edad en grupos maximizando la información sobre la supervivencia o no del pasajero. Para ello se usará los *Odds-Ratio*, que nos medirá si es más probable sobrevivir a una edad con respecto al resto. Para ello se van a escoger edades entre 1 y 30 como humbral de discrimanción y se va a hacer un gráfico con el resultado. 
+
+En el histograma de la variable **age** junto con la probabilidad de supervivencia es posible observar que a menos edad mayor tasa de supervivencia. Por lo tanto, nos encontramos ante un escenario dónde sabemos que la edad no especificada es dependiente con la variable **Survived**. Además, pertenecer al rango de menos edad significa tener más probabilidad de sobrevivir. Por lo tanto, para discretizar la variable se ha de escoger un valor óptimo que discretice la edad en grupos maximizando la información sobre la supervivencia o no del pasajero. Para ello se usará los *Odds-Ratio*, que nos medirá si es más probable sobrevivir a una edad con respecto al resto. Se van a escoger edades entre 1 y 30 como humbral de discrimanción y se va a hacer un gráfico con el resultado. 
 
 ```{r variable Age odds ratop de supervivencia}
 survived_age<-relevel(age_survived_with_specified_age$Survived,ref="1")
@@ -231,7 +241,7 @@ for (i in 1:30){
 plot(result, xlab ="Age", ylab="Odds-Ratio", yaxp  = c(0, 10, 10))
 ```
 
-Como se puede observar, a medida que disminuye la edad aumenta la probabilidad de supervivencia, la cual se mantiene al doble para edades menores de 16 años. A partir de 21, se puede considerar que la edad no es significativa siendo la *Odds-ratio* similiar a 1. Escoger una edad muy baja, mejora la predicción , sin embargo,  como se ve en el histograma, la mayoria de la poblacion esta concentrada en edades alrededor de 30 años. Por lo tanto,  esta variable dejará de ser util para un segmento amplio de nuestro juego de datos. Escoger un valor muy alto de edad, puede hacer la variable mas útil para una mayor parte del juego de datos pero con menor capacidad predictiva. Por ello se escogera un valor de compromiso, considerando como que el doble de probabilidad de supervivencia es un buen indicador y además incluye a un amplio segmento de la población joven, por lo que para discretizar la variable se usará 16 años como limite entre niño y adulto. Teniendo en cuenta esto, la variable **Age** se discretizará de la siguiente manera para maximizar la información entre los grupos.  
+Como se puede observar, a medida que disminuye la edad aumenta la probabilidad de supervivencia, la cual se mantiene al doble para edades menores de 16 años. A partir de 21, se puede considerar que la edad no es significativa siendo la *Odds-ratio* similiar a 1. Escoger una edad muy baja, mejora la predicción , sin embargo,  como se ve en el histograma, la mayoria de la poblacion esta concentrada en edades alrededor de 30 años. Por lo tanto,  esta variable dejará de ser util para un segmento amplio de nuestro juego de datos. Escoger un valor muy alto de edad, puede hacer la variable mas útil para una mayor parte del juego de datos pero con menor capacidad predictiva. Por ello se escogera un valor de compromiso, considerando como que el doble de probabilidad de supervivencia es un buen indicador y además incluye a un amplio segmento de la población joven. Por lo tanto,  para discretizar la variable se usará 16 años como limite entre niño y adulto. Teniendo en cuenta esto, la variable **Age** se discretizará de la siguiente manera para maximizar la información entre los grupos.  
 
 ```{r discretización variable age}
 ## Grupos niño, adulto y sin especificar
@@ -252,7 +262,7 @@ datos$Age<-as.factor(mapply(categorizar_edad,
 
 ```
 
-### 3.2. Identificación y tratamiento de valores extremos. 
+## 3.2. Identificación y tratamiento de valores extremos. 
 
 El análisis de los valores extremos, se va a efectuar sobre las variables continuas que son: **Fare**, **SibSp** y **Parch**. 
 
@@ -262,7 +272,7 @@ library(DescTools)
 boxplot(datos$Fare, col="orange", xlab="Fare")
 ```
 
-Debido a la naturaleza de la variable **Fare**, predominan los precios bajos y, por lo tanto, sigue una distribución lognormal lo que va a provocar una gran cantidad de valores extremos los cuales están aceptados porque representan tickets más caros debido a las condiciones (i.e. cabina, embarque...). Mediante la  transformación de Box Cox se intenta mejorar la normalidad y homocedasticidad, lo que llevará a una menor proporción de valores extremos.
+Debido a la naturaleza de la variable **Fare**, predominan los precios bajos y, por lo tanto, sigue una distribución lognormal lo que va a provocar una gran cantidad de valores extremos asociados a tickets más caros debido a las condiciones de compra (i.e. cabina, embarque...). Mediante la  transformación de Box Cox se intenta mejorar la normalidad y homocedasticidad, lo que llevará a una menor proporción de valores extremos.
 
 ```{r}
 x<-datos$Fare
@@ -288,6 +298,7 @@ Despues de la transformación, ya no se observa la presencia de *outliers* los c
 ```{r boxplots Fare}
 boxplot(datos$Fare, col="orange", xlab="Fare")
 ```
+
 En el caso de las variables **SibSp** y **Parch**  si realizamos el *boxplot* se observa que presentan muchos valores extremos. Esto es debido a la naturaleza de las variables que se puede visualizar mediante histrogramas y la curva de los cuartiles teoricos vs observados. Como las variables **SibSp** y **Parch** contienen el número de parentescos es común tener predominancia en los núemeros bajos y menos casos a medida que aumenta el valor de la variable. Aunque son númericas, su distribución es similiar a la de las variable discretas con las observaciones agrupándose en determinados valores (i.e. 0, 1, 2....). Debido a su naturaleza se considera que la discretización de ambas aportará más valor al análisis ya que no es posible normalizar la variable. 
 
 ```{r SibSp valores extremos, message = FALSE }
@@ -311,7 +322,7 @@ hist(y, main="", xlab = "Parch", col="orange")
 
 Si la variable **SibSp** nos indica el número de conyugales o hermanos y la variable **Parch** nos indica el número de padres e hijos debe de haber una relación entre dichas variables.
 
-```{r SibSp y Parch}
+```{r SibSp y Parch, warming=FALSE}
 
 SibSp_factor<- as.factor(datos$SibSp)
 Parch_factor<- as.factor(datos$Parch)
@@ -319,7 +330,7 @@ Parch_factor<- as.factor(datos$Parch)
 chisq.test(Parch_factor, SibSp_factor)
 ```
 
-Teniendo en cuenta que p-valor<0.05,  ambas variables son dependientes. Para no solapar ambas variables en el algoritmo de predicción se crea una nueva variable que contenga el número de parientes la cual será la suma de ambas variables.
+Teniendo en cuenta que p-valor<0.05,  ambas variables son dependientes. Para evitar información redundante en los algoritmos de predicción se crea una nueva variable denominada **Parents** (i.e. parientes) que será la suma de **SibSp** y **Parch**. 
 
 ```{r creacion variable parents y su dependencia en la supervivencia}
 # creamos la nueva variable
@@ -352,7 +363,8 @@ for (i in levels(datos$Ticket)){
 }
 tickets_check
 
-subset(datos[datos$Ticket==tickets_check[1], ], select = c(PassengerId, Ticket, Cabin, Embarked, Fare))
+subset(datos[datos$Ticket==tickets_check[1], ], 
+       select = c(PassengerId, Ticket, Cabin, Embarked, Fare))
 ```
 
 Se observa que solo un número de ticket presenta valores diferentes en la variable **Fare** y que esta diferencia es muy pequeña. Por lo tanto, consideramos que la información de la variable **Ticket** ya está explicada en la variable **Fare** y, por lo tanto, no es necesaria para el análisis. Además, se considera más conveniente utilizar la variable **Fare** ya que no es identificadora y ayudará más a comprender la supervivencia de los pasajeros e función del precio que hayan pagado por el billete. 
@@ -381,7 +393,7 @@ attach(datos)
 
 ## 4.1. Selección de los grupos de datos que se quieren analizar/comparar (Planificación de los análisis)
 
-En primer lugar, debido a qué el objetivo del análisis es entender qué variables influyen y en qué medida en la supervivencia, se van a realizar contrastes de hipótesis para medir la dependencia de las variables con respecto a la supervivencia. En el caso de las variables categóricas se realizarán test *Chi-cuadrado* de la siguiente manera: 
+En primer lugar, debido a qué el objetivo del análisis es entender qué variables influyen y en qué medida en la supervivencia, se van a realizar contrastes de hipótesis para medir la dependencia de las variables con respecto a l asupervivencia. En el caso de las variables categóricas se realizarán test *Chi-cuadrado* de la siguiente manera: 
 
 - **PClass** vs **Survived**
 - **Sex** vs **Survived**
@@ -399,7 +411,7 @@ Una vez comprendida la relación de cada variable con la supervivencia, se va a 
 
 - Árbol de decisión: Es un algoritmo que va a intentar subdividir el espacio de entrada de datos para generar regiones disyuntas. Cada una de estas regiones estará asociada a los atributos de entrada y tendrá asociada una probabilidad de supervivencia[@roig2018mineria]. 
 
-- RandomForests: Es un algoritmo que usa varios clasificadores basados en árboles de decisión para mejorar la predicción. Se construye cada árbol con m predictores escogidos de forma aleatoria, y se promedia el conjunto de modelos[@roig2018mineria]. 
+- randomforest: Es un algoritmo que usa varios clasificadores basados en árboles de decisión para mejorar la predicción. Se construye cada árbol con m predictores escogidos de forma aleatoria, y se promedia el conjunto de modelos[@roig2018mineria]. 
 
 
 ## 4.2. Comprobación de la normalidad y homogeneidad de la varianza
@@ -414,12 +426,13 @@ hist(Fare, col = 'darkslategray1',
      ylab= "Density")
 lines(density(Fare), col = 'red', lwd='3')
 ```
+
 En el gráfico anterior vemos que pese a qué la variable ha sido transformada no sigue una distribución normal. Lo podemos reforzar con un test de normalidad de *saphiro* donde las hipótesis a contrastar son las siguientes:
 
 $$
-\text{Hipótesis nula. } H_0 \text{: Sigue una distribución normal}
+\text{Hipótesis nula. } H_0 \text{: Sigue una distribución normal}  
 \\
-\text{Hipótesis alternativa. } H_1 \text{: NO sigue una distribución normal}
+\text{Hipótesis alternativa. } H_1 \text{: NO sigue una distribución normal}  
 $$
 
 ```{r}
@@ -430,9 +443,9 @@ Debido a qué $p-valor < \alpha = 0.05$ rechazamos la hipótesis nula y aceptamo
 Para comprobar la homogeneidad de la variable **Fare** se van a utilizar las variables que se consideran más críticas para definir el precio. Estas son las variables **Embarked**, **Pclass** y **Cabin**. Debido a qué la variable **Fare** no sigue una distribución normal, nos vemos obligados a realizar un test basado en la mediana. Se va a aplicar el test de Levene ya que este nos permite medir la homocedasticidad o homogeneidad a partir de la mediana sin importar que los datos no sigan una distribución normal. Las hipótesis a contrastar en el test es la siguiente:
 
 $$
-\text{Hipótesis nula. } H_0 \text{: NO hay diferencias significativas entre las varianzas}
+\text{Hipótesis nula. } H_0 \text{: NO hay diferencias significativas entre las varianzas}  
 \\
-\text{Hipótesis alternativa. } H_1 \text{: Hay diferencias significativas entre las varianzas}
+\text{Hipótesis alternativa. } H_1 \text{: Hay diferencias significativas entre las varianzas}  
 $$
 
 ```{r}
@@ -464,12 +477,12 @@ $$
 \text{Hipótesis alternativa. } H_1 \text{: Las variables  no son independientes.}
 $$
 Los pares de variables a analizar son:  
-- **PClass** vs **Survived**
-- **Sex** vs **Survived**
-- **Age** vs **Survived**
-- **Parents** vs **Survived**
-- **Cabin** vs **Survived**
-- **Embarked** vs **Survived**
+- **PClass** vs **Survived**  
+- **Sex** vs **Survived**  
+- **Age** vs **Survived**  
+- **Parents** vs **Survived**  
+- **Cabin** vs **Survived**  
+- **Embarked** vs **Survived**  
 
 ```{r, warning=FALSE}
 # Test chi-cuadrado 
@@ -496,7 +509,8 @@ chis_test_matrix
 
 datos$Sex<-relevel(datos$Sex, ref="female")
 datos$Age<-relevel(datos$Age, ref="child")
-datos$Parents <- ordered(datos$Parents, levels = c("3", "2", "1", "6", "0", "4", "5", "7", "10"))
+datos$Parents <- ordered(datos$Parents, levels = c("3", "2", "1", "6", 
+                                                   "0", "4", "5", "7", "10"))
 
 gamma_matrix<-matrix(
                 c(
@@ -516,7 +530,7 @@ gamma_matrix<-matrix(
 
 gamma_matrix
 ```
-Para todas las variables el $p-valor < \alpha = 0.05$, luego se rechaza la hipótesis nula a favor de la alternativa. Por lo tanto, todas estas variables son dependientes por lo que todas tienen un peso en la probabilidad de sobrevivir. Además se observa mediante el test Gamma que dicha fuerza es mayor en las variables **Sex**, **Cabin** y **Pclass** y menor en **Parents**, **Embarked** y **Age**. El hecho que el signo sea negativo nos indica que la probabilidad de sobrevivir disminuye a medida que avanzamos en los diferentes niveles del factor y esto depende de como están o han sido ordenados con las funciones *relevel()* o *ordered*. Dicha relación se verá gráficamente en el apartado 5 del presente informe, sin embargo, a modo explicativo de las variables que presentan una mayor fuerza en la dependencia decir que el hecho de ser mujer, viajar en cabina y en primera clase aumenta las probabilidades de sobrevivir.  
+Para todas las variables el $p-valor < \alpha = 0.05$, luego se rechaza la hipótesis nula a favor de la alternativa. Por lo tanto, todas estas variables son dependientes por lo que todas tienen un peso en la probabilidad de sobrevivir. Además se observa mediante el test Gamma que dicha fuerza es mayor en las variables **Sex**, **Cabin** y **Pclass** y menor en **Parents**, **Embarked** y **Age**. El hecho que el signo sea negativo nos indica que la probabilidad de sobrevivir disminuye a medida que avanzamos en los diferentes niveles del factor y esto depende de como están o han sido ordenados con las funciones *relevel()* o *ordered*. Dicha relación se verá gráficamente en el apartado 5 del presente informe, sin embargo, y a moddo explicativo de de las variables con una mayor fuerza en la dependencia, decir que el hecho de ser mujer, viajar en cabina y en primera clase aumenta las probabilidades de sobrevivir.  
 
 #### 4.3.1.2. Variables continuas.
 
@@ -525,11 +539,11 @@ El objetivo de este análisis es identificar si existe una relación  entre la m
 Se define el siguiente contraste de hipótesis: 
 
 $$
-H_0: \mu_1 = \mu_2
+H_0: \mu_1 = \mu_2  
 \\
-H_1: \mu_1 \neq \mu_2
+H_1: \mu_1 \neq \mu_2  
 \\
-\text{donde, 1 corresponde al conjunto que sobrevivió y 2 al que no sobrevivió}
+\text{donde, 1 corresponde al conjunto que sobrevivió y 2 al que no sobrevivió}  
 $$
 
 En base al Teorema del límite central tenemos la variable $\frac{\overline{X}_1 - \overline{X}_2}{S_{\overline{X}_1 - \overline{X}_2}}$ que sigue una distribución normal $N(0, 1)$.
@@ -570,9 +584,9 @@ Teniendo en cuenta los resultados del aparado anterior se van a usar la siguient
 
 #### 4.3.2.1 Árbol de decisión
 
-Es interesante aplicar un árbol de decisión para entender que variables son más significativas a la hora de predecir o no si un pasajero sobrevive.
+Es interesante aplicar un árbol de decisión para entender que variables son más significativas a la hora de predecir si un pasajero sobrevive.
 
-```{r results='hide'}
+```{r results='hide', message=FALSE}
 library(rpart)
 library(rpart.plot)
 library(caret)
@@ -615,11 +629,11 @@ confusionMatrix(predict_tree, y_test)
 ```
 El árbol de decisión ha sido capaz de colocar correctamente un 85.47 % de los registros de test, los cuales corresponden a un 20 % de nuestra población.
 
-### 4.3.2.2 RandomForest
+### 4.3.2.2 randomforest
 
-A continuación, se aplica el algoritmo de Random Forest. Se aplica este tipo de algoritmo  por dos motivos: (1) Se considera una buena alternativa cuando se tienen muchas variables categóricas de entrada, y (2) Nos ayuda a comprender el poder del árbol de decisión generado anteriormente ya que el algoritmo genera muchos árboles con diferentes condiciones.
+A continuación, se aplica el algoritmo de Random Forest. Se aplica este tipo de algoritmo  por dos motivos: (1) Se considera una buena alternativa cuando se tienen muchas variables categóricas de entrada, y (2), nos ayuda a comprender el poder del árbol de decisión generado anteriormente ya que el algoritmo genera muchos árboles con diferentes condiciones.
 
-```{r, results='hide'}
+```{r, results='hide', message=FALSE}
 library(randomForest)
 # devtools::install_github("MI2DataLab/randomForestExplainer")
 library(randomForestExplainer)
@@ -642,39 +656,59 @@ predict_random_forest = predict(rf, newdata=X_test)
 confusionMatrix(predict_random_forest, y_test)
 ```
 
-Se observa cómo la precisión ha disminuido levemente  con respecto al árbol de decisión (i.e. de 85.5% a 84.9%) . Por lo tanto, nuestro set de datos se explica (al menos para este orden aleatorio de los datos) peor la supervivencia que el árbol de decisión aplicado anteriormente.
+Se observa cómo la precisión ha disminuido levemente  con respecto al árbol de decisión (i.e. de 85.5% a 84.9%) . Por lo tanto, en este caso randomforest tiene un poder predictivo ligeramente inferior al del árbol de decisión aplicado anteriormente.
 
-## 5. Representación de los resultados a partir de tablas y gráficas
+# 5. Representación de los resultados a partir de tablas y gráficas
 
-### 5.1.Dependencia de las variables con respecto a la probabilidad de sobrevivir
+## 5.1.Dependencia de las variables con respecto a la probabilidad de sobrevivir
 
 En este apartado se va a representar gráficamente la dependencia de las variables categóricas con respecto a la probabilidad de sobrevivir.
-```{r }
+```{r message = FALSE}
 library(ggpubr)
 
-p1<- ggplot(data=datos, aes(x=Pclass,fill=Survived)) + geom_bar(position="fill") + ylab("Frecuency") + xlab("Pclass") + ggtitle(paste("Gamma = ",toString(round(gamma_matrix[1], digits = 2)))) + theme(plot.title = element_text(size=10,hjust = 0.5))
+p1<- ggplot(data=datos, aes(x=Pclass,fill=Survived)) + geom_bar(position="fill")+
+     ylab("Frecuency") + xlab("Pclass")+ 
+     ggtitle(paste("Gamma = ",toString(round(gamma_matrix[1], digits = 2)))) +
+     theme(plot.title = element_text(size=10,hjust = 0.5))
 
-p2<-ggplot(data=datos, aes(x=Sex,fill=Survived))+geom_bar(position="fill") +xlab("Sex")+theme(axis.title.y=element_blank())+ggtitle(paste("Gamma = ",toString(round(gamma_matrix[2], digits = 2))))+ theme(plot.title = element_text(size=10,hjust = 0.5))
+p2<-ggplot(data=datos, aes(x=Sex,fill=Survived))+geom_bar(position="fill") +
+    xlab("Sex")+theme(axis.title.y=element_blank())+
+    ggtitle(paste("Gamma = ",toString(round(gamma_matrix[2], digits = 2))))+
+    theme(plot.title = element_text(size=10,hjust = 0.5))
 
-p3<-ggplot(data=datos, aes(x=Age,fill=Survived))+geom_bar(position="fill")+ylab("Frecuency")+xlab("Age")+theme(axis.title.y=element_blank())+ggtitle(paste("Gamma = ",toString(round(gamma_matrix[3], digits = 2))))+ theme(plot.title = element_text(size=10,hjust = 0.5))
+p3<-ggplot(data=datos, aes(x=Age,fill=Survived))+geom_bar(position="fill")+
+    ylab("Frecuency")+xlab("Age")+theme(axis.title.y=element_blank())+
+    ggtitle(paste("Gamma = ",toString(round(gamma_matrix[3], digits = 2))))+
+    theme(plot.title = element_text(size=10,hjust = 0.5))
 
-p4<-ggplot(data=datos, aes(x=Parents,fill=Survived))+geom_bar(position="fill")+ylab("Frecuency")+xlab("Parents")+ggtitle(paste("Gamma = ",toString(round(gamma_matrix[4], digits = 2))))+ theme(plot.title = element_text(size=10,hjust = 0.5))
+p4<-ggplot(data=datos, aes(x=Parents,fill=Survived))+geom_bar(position="fill")+
+    ylab("Frecuency")+xlab("Parents")+
+    ggtitle(paste("Gamma = ",toString(round(gamma_matrix[4], digits = 2))))+
+    theme(plot.title = element_text(size=10,hjust = 0.5))
 
-p5<-ggplot(data=datos, aes(x=Cabin,fill=Survived))+geom_bar(position="fill")+ylab("Frecuency")+xlab("Cabin")+theme(axis.title.y=element_blank())+ggtitle(paste("Gamma = ",toString(round(gamma_matrix[5], digits = 2))))+ theme(plot.title = element_text(size=10,hjust = 0.5))
+p5<-ggplot(data=datos, aes(x=Cabin,fill=Survived))+geom_bar(position="fill")+
+    ylab("Frecuency")+xlab("Cabin")+theme(axis.title.y=element_blank())+
+    ggtitle(paste("Gamma = ",toString(round(gamma_matrix[5], digits = 2))))+
+    theme(plot.title = element_text(size=10,hjust = 0.5))
 
-p6<-ggplot(data=datos, aes(x=Embarked,fill=Survived))+geom_bar(position="fill")+ylab("Frecuency")+xlab("Embarked")+theme(axis.title.y=element_blank())+ggtitle(paste("Gamma = ",toString(round(gamma_matrix[6], digits = 2))))+ theme(plot.title = element_text(size=10,hjust = 0.5))
+p6<-ggplot(data=datos, aes(x=Embarked,fill=Survived))+geom_bar(position="fill")+
+    ylab("Frecuency")+xlab("Embarked")+theme(axis.title.y=element_blank())+
+    ggtitle(paste("Gamma = ",toString(round(gamma_matrix[6], digits = 2))))+
+    theme(plot.title = element_text(size=10,hjust = 0.5))
 
 
-ggarrange(p1, p2,p3,p4,p5,p6, ncol = 3 , nrow = 2,  common.legend = TRUE, legend="bottom")
+ggarrange(p1, p2,p3,p4,p5,p6, ncol = 3 , nrow = 2,
+          common.legend = TRUE, legend="bottom")
 
 ```
-Como ya se avanzó en el apartado anterior el sexo, el hecho de tener cabino o no y la clase donde se compró el billete están relacionados con la probabilidad de sobrevivir. Ser mujer, y alojarse en cabina en primera clase aumentan estas posibilidades. Por contra, ser hombre, estar en tercera clase y no tener cabina asignada la disminuyen. Aunque en menor medida el  número de familiares, el sitio de embarque y la edad también presentan una dependencia con la probabilidad de sobrevivir aunque más débil. Un número de familiares entre 1 y 3 aumentan la posibilidad de supervivencia, disminuyendo para familias mas grandes y en el caso que se viaje solo. El hecho de ser niño también aumentan la probabilidad de supervivencia, así como el sitio donde se embarcó, siendo Cherbourg ("C") el lugar de embarque  que las aumenta frente a Queenstown ("Q") y Southampton ("S").  
 
-Estas variables pueden tener interacción entre ellas, influyendo alguno de los niveles de unas en las otras. Por ejemplo, es asumible pensar que el hecho de tener cabina o no , esta asociado al tipo de clase en que se aloja el pasajero. Por ello ejecutar algoritmos de clasificación ayudará a mejorar la interpretación de los resultados ya que teniendo en cuenta la interacción entre variables darán información de cuales de estas variables sin más importantes a la hora de determinar la probabilidad de supervivencia. 
+Como ya se avanzó en el apartado anterior el sexo, el hecho de tener cabino o no y la clase donde se compró el billete determinan en mayor medida la probabilidad de sobrevivir. Ser mujer, y alojarse en cabina en primera clase aumentan estas posibilidades. Por contra, ser hombre, estar en tercera clase y no tener cabina asignada la disminuyen. El  número de familiares, el sitio de embarque y la edad también presentan una dependencia con la probabilidad de sobrevivir aunque más débil. Un número de familiares entre 1 y 3 aumentan la posibilidad de supervivencia, disminuyendo para familias mas grandes y en el caso que se viaje solo. El hecho de ser niño también aumentan la probabilidad de supervivencia, así como el sitio donde se embarcó, siendo Cherbourg ("C") el lugar de embarque  que las aumenta frente a Queenstown ("Q") y Southampton ("S").  
 
-### 5.2. Representación del árbol de decisión
+Estas variables pueden tener interacción entre ellas, influyendo alguno de los niveles de unas en las otras. Por ejemplo, es asumible pensar que el hecho de tener cabina o no, está asociado al tipo de clase en que se aloja el pasajero. Por ello ejecutar algoritmos de clasificación ayudará a mejorar la interpretación de los resultados ya que teniendo en cuenta la interacción entre variables darán información de cuales de estas variables son más importantes a la hora de determinar la probabilidad de supervivencia. 
 
-La aplicación de un árbol de decisión aporta una buena descripción de los datos debido a sus características. Al analizar un árbol de decisión se puede  comprender qué peso y cómo se utilizan las variables para determinar  la supervivencia o no de los pasajeros. 
+## 5.2. Representación del árbol de decisión
+
+Debido a como funciona el algoritmo de una arbol de decisión, su aplicación aporta una buena descripción de los datos. Al analizar un árbol de decisión se puede  comprender qué peso y cómo se utilizan las variables para determinar  la supervivencia o no de los pasajeros. 
 
 A continuación, se muestra el árbol de decisión.
 
@@ -690,7 +724,7 @@ rpart.plot(arbol_1, type = 2)
 
 Como se puede observar en el árbol generado, la primera variable a partir de la cual se realiza una buena discriminación es **Sex**. Dependiendo de cada sexo, se utilizan las variables **Cabin** y **Pclass** para determinar si una persona sobrevive o no. Después de estas tres variables,  el resto de variables han sido utilizadas para tomar la decisión de la supervivencia o no de los pasajeros. La mayor probabilidad de supervivencia se da con un 94% cuando se es mujer y se aloja en clase 1 o 2.
 
-### 5.3. Representación del Random Forest
+## 5.3. Representación del randomforest
 
 El algoritmo de randomforest genera muchos árboles de decisión de forma aleatoria. Su interpretación es más complicada que el árbol de decisión, pero nos aporta información adicional ya que se generan múltiples árboles con entrada de variables aleatorias seleccionando los que mejoran la precisión. Por ello,  nos da información de la importancia de las variables en determinar la probabilidad de supervivencia. Sin embargo, debido a su naturaleza puede provocar un sobreajuste de los datos, lo que reduce la precisión del conjunto test. A continuación se va a representar el número de veces que una variable ha sido raiz del árbol, frente al promedio de la profundidad de  la primera vez que se separa. 
 
@@ -706,9 +740,9 @@ Se han procesado las variables del juego de datos del Titanic con el objetivo de
 
 Se usaron para el análisis final un total de 6 variables discretas (i.e. **Pclass**, **Sex**, **Parents**, **Embarked**, **Cabin** y **Age**) y 1 continua (i.e. **Fare**). No hubo ningún preprocesamiento, a parte de la discretización mediante la funcón *as.factor*, en las variables **Pclass** y  **Sex**. Por su parte la variable **Parents** es el resultado de la suma de las variables **SibSp** y **Parch** las cuales tampoco fueron objeto de preprocesamiento.
 
-Las variables **Age**,**Cabin**, **Embarked** y **Fare** presentaron valores **NA**, vacíos o 0. Debido al gran número de valores *NA*, la variable **Age** fue discretizada en función de un umbral óptimo que diferencia entre la probabilidad de supervivencia de los individuos más jóvenes y el número de casos que compendia dicha población. En la variable **Cabin** fue discretizada en función de si tenía (i.e. *with_cabin*) o si no tenía (i.e. *whitout_cabin*) valor asociado. Por su parte, se usaron el conjunto de variables **Fare**, **Cabin**, **Embarked** y **Pclass** para imputar mediante *kNN()* los valores perdidos de la variable **Fare** (de valor 0) y **Embarked** que eran faltantes, ya que se considera que este grupo de variables tienen una relación que las hace adecuadas para llevar a cabo dicha imputación. Por último, la única variable continua del juego de datos **Fare**, no pasó los test estadísticos de normalidad y homocestacidad. Sim embargo, como contiene más de 30 observaciones y en base al Teorema del Limite Central, se considera que tiene una distribución que tiende a la normalidad y por eso motivo fue utilizada. 
+Las variables **Age**,**Cabin**, **Embarked** y **Fare** presentaron valores **NA**, vacíos o 0. Debido al gran número de valores *NA*, la variable **Age** fue discretizada primero en función de la existencia o no de valores *NA*, y posteriormente en función de un umbral óptimo que diferencia entre la probabilidad de supervivencia de los individuos más jóvenes y el número de casos que comprendia dicha población. La variable **Cabin** fue discretizada en función de si tenía (i.e. *with_cabin*) o si no tenía (i.e. *whitout_cabin*) valor asociado. Por su parte, se usaron el conjunto de variables **Fare**, **Cabin**, **Embarked** y **Pclass** para imputar mediante *kNN()* los valores perdidos de la variable **Fare** (de valor 0) y **Embarked** que eran faltantes, ya que se considera que este grupo de variables tienen una relación que las hace adecuadas para llevar a cabo dicha imputación. Por último, la única variable continua del juego de datos **Fare**, no pasó los test estadísticos de normalidad y homocestacidad. Sim embargo, como contiene más de 30 observaciones y en base al Teorema del Limite Central, se considera que tiene una distribución que tiende a la normalidad y por eso motivo fue utilizada. 
 
-La precisión de los algoritmos de clasificación se considera buena al rondar en ambos casos, árbol de decisión y randomForest, el 85% en el conjunto de test. Este hecho, conjuntamente con la confrontación de cada variable individualmente con la supervivencia nos permite poder evaluar que características de cada pasajero determinan su probabilidad de supervivencia. Se observó que el sexo, el hecho de viajar en cabina y la clase determinan mayormente la probabilidad de supervivencia, aumentando considerablemente al ser mujer y viajando en primera o segunda clase en cabina. EL hecho de viajar en cabina y en clases superiores aumenta considerablemente el precio del ticket (i.e. **Fare**) estando, por lo tanto, esta variable relacionada ligada a la probabilidad de supervivencia. Por su parte, el numero de parientes, el sitio de embarque y la edad, aunque influyen en la probabilidad de sobrevivir, lo hacen de una manera menor.  
+La precisión de los algoritmos de clasificación se considera buena al rondar en ambos casos, árbol de decisión y randomForest, el 85% en el conjunto de test. Este hecho, conjuntamente con la confrontación de cada variable individualmente con la supervivencia nos permite poder evaluar que características de cada pasajero determinan su probabilidad de supervivencia. Se observó que el sexo, el hecho de viajar en cabina y la clase determinan mayormente la probabilidad de supervivencia, aumentando considerablemente al ser mujer y viajando en primera o segunda clase en cabina. EL hecho de viajar en cabina y en clases superiores aumenta considerablemente el precio del ticket (i.e. **Fare**) estando, por lo tanto, esta variable relacionada a la probabilidad de supervivencia. Por su parte, el numero de parientes, el sitio de embarque y la edad, aunque influyen en la probabilidad de sobrevivir, lo hacen en una manera menor.  
 
 # 7. Contribuciones
 
