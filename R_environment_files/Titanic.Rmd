@@ -1,12 +1,12 @@
 ---
-title: "Titanic2"
+title: "Práctica 2: Limpieza y análisis de datos"
 author: "Aleix Cortina, Kilian Cañizares"
-date: "5/8/2020"
+date: "09/06/2020"
 output:
   html_document:
     toc :  yes
-  pdf_document:
-    toc :  yes
+  pdf_document: 
+    toc: yes
 bibliography: scholar.bib
 ---
 
