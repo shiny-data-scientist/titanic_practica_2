@@ -358,6 +358,12 @@ subset(datos[datos$Ticket==tickets_check[1], ], select = c(PassengerId, Ticket, 
 Se observa que solo un número de ticket presenta valores diferentes en la variable **Fare** y que esta diferencia es muy pequeña. Por lo tanto, consideramos que la información de la variable **Ticket** ya está explicada en la variable **Fare** y, por lo tanto, no es necesaria para el análisis. Además, se considera más conveniente utilizar la variable **Fare** ya que no es identificadora y ayudará más a comprender la supervivencia de los pasajeros e función del precio que hayan pagado por el billete. 
 
 ```{r}
+# imprimos le fichero después de las modificaciones realizadas.
+write.csv(datos, './titanic_clean_data.csv', row.names = F)
+```
+
+
+```{r}
 # eliminamos las variables que no usaremos para el análisis
 datos$PassengerId<-NULL
 datos$Name<-NULL
