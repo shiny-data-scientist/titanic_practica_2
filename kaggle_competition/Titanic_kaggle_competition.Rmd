@@ -1,0 +1,533 @@
+---
+title: "Titanic2"
+author: "Aleix Cortina, Kilian Cañizares"
+date: "5/8/2020"
+output:
+  html_document:
+    toc :  yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, include=FALSE}
+# set working directory where this file is located
+setwd("./")
+```
+
+
+## 1. Descripción del Dataset
+
+En esta práctica se va a analizar el juego de datos del Titanic que se puede encontrar en:  
+
+https://www.kaggle.com/c/titanic  
+
+y cuyos datos se encuentran en el fichero "train.csv". 
+
+Este es un conjunto de datos referente a los pasajeros del Titanic que se compone de un total de 12 variables que a continuación se describen: 
+
+- **PassagerId**: Identifica a cada pasejero por un identificador. Formato entero.   
+- **Survived**: Especifica si un pasajero sobrevivió (1) o no (0). Formato entero.  
+- **Pclass**: Indica la clase en que un pasajero viajaba. Formato entero. 
+- **Name**: Nombre del pasajero. Formato factor. 
+- **Sex**: Sexo del pasajero. Formato factor.  
+- **Age**: Edad del pasajero en años. Formato numérico. 
+- **SibSp**: Número de familiares o cónyugues a bordo. Formato entero.  
+- **Parch**: Número padres e hijos a bordo. Formato entero. 
+- **Ticket**. Número de ticket del pasajero. Formato factor. 
+- **Fare**: Precio del ticket en dolares. Formato numérico. 
+- **Cabin**: Número de cabina del pasajero. Formato factor.  
+- **Embarked**: Lugar de embarque del pasajero. Formato factor. 
+ 
+Con un número total de observaciones de 891.  
+
+El objetivo de la creación de este conjunto de datos es analizar si la probabilidad de supervivencia de un pasajero está condicionada por el resto de variables del conjunto de datos. Si bien el hecho de predecir la supervivencia en el naufragio del Titanic no es relevante en la actuaidad, las mejoras derivadas del entrenamiento de este tipo de algoritmos pueden tener aplicaciones importantes en áreas como la salud (i.e. predecir la mortalidad en función de hábitos y variables físicas del paciente), seguros (i.e. predecir el valor de un seguro en función de las características de un cliente), entre otras.  
+
+## 2.Integración y selección de los datos de interés a analizar
+
+```{r carga de datos}
+# Carga del juego de datos
+datos<-read.csv("../data/train.csv", sep = ",", header = TRUE)
+
+# Estructura de los datos
+str(datos)
+# Descipción de los datos
+summary(datos)
+```
+
+Como se puede observar, existen dos variables que tienen un valor único para cada observación: **PassengerId** y **Name**. Estas variables no se tendrán en cuenta en el análisis ya que al ser variables con valor único, no dan información diferencial para calcular la probabilidad de que un pasejero sobreviva o no. Por el momento se mantienen estas variables ya que pueden ser de ayuda para algún tratamiento de datos, pero para no sobre-especializar el algoritmo a nivel de la identidad de los pasajeros (nos interesa entender el comportamiento de las variables más genéricas) no se tendrán en cuenta para el análisis y se procederá con su eliminación antes de comenzar.
+
+El resto de variables serán usadas para comprender de que depende la probabilidad de supervivencia. En primer lugar, se van a discretizar las variables **Pclass** referente a la clase donde viajó el pasajero, y **Survived** que se refiere a si sobrevivió o no, ya que ambas a pesar de estar en formato *int* se consideran categóricas.
+
+```{r datos que entran en el análisis }
+# Discretización de variables.
+datos$Survived<-as.factor(datos$Survived)
+datos$Pclass<-as.factor(datos$Pclass)
+```
+
+## 3. Limpieza de datos
+
+Es este apartado, además de limpiar los datos, se van a efectuar transformaciones en las variables para optimizar su uso en el análisis.
+
+### 3.1. Ceros, elementos vacios y NA
+Para evaluar la presencia de NA,  elementos vacíos o ceros,  se ejecutan las siguientes rutinas 
+```{r ceros o elementos vacios }
+# Presencia de valores NA
+colSums(is.na(datos))
+
+# Presencia de valores vacíos
+colSums(datos=="")
+
+# Presencia de valores 0
+colSums(datos==0)
+```
+
+La variable **Age** contiene un total de 177 valores NA. Además, las variables **Cabin** y **Embarked** tienen un total de 687 y 2  valores vacios respectivamente. Por otro lado, los ceros pueden ser un valor aceptable en variables como **Survived** indicando que el pasajero no sobrevivió, en **SibSp** indicando el número de familiares o cónyugues, o en **Parch** indicando el número de padres e hijos. Sin embargo, los 15 valores 0 de la variable **Fare** carecen de sentido, así que serán tratados como valores perdidos. 
+
+#### 3.1.1. Valores vacíos y 0
+Las variables a tratar en este apartado son **Fare**, **Cabin** y **Embarked**. 
+Respecto a la variable **Cabin**, proporciona información de la cabina donde se alojó un pasajero. Los valores vacíos corresponden a pasajeros que no se han alojado en cabina. El hecho que esté alojado en cabina debería de estar relacionado con la clase en al que se aloja el pasajero, y por lo tanto seguramente con la probabilidad de supervivencia. Primero se comprobará mediante un test *Chi-cuadrado* si existe o no dependencia entre tener asignado un número de cabina y la supervivencia mediante el siguiente test de hipótesis: 
+
+$$
+\text{Hipótesis nula. } H_0 \text{: Las variables son independientes.}
+\\
+\text{Hipótesis alternativa. } H_1 \text{: Las variables  no son independientes.}
+$$
+
+
+```{r variable Cabin, message = FALSE }
+
+library(plyr)
+# Discretización variable Cabin
+
+cabin_cat <- as.factor(
+  sapply(datos$Cabin, function (cabin) if (cabin=="") "without_cabin" else "with_cabin")
+  )
+
+chisq.test(datos$Survived, cabin_cat)
+```
+ 
+Como se puede observar la $p < \alpha = 0.05$ y se puede concluir que las variables no son independientes, luego existe una relación entre la supervivencia y el hecho de tener asignada una cabina. Así que se categorizará esta variable con dos niveles: *with_cabin* y *without_cabin* y se usará para el análisis.
+
+```{r generar la variable cabin cat}
+# Se crea la nueva varibale Cabin
+datos$Cabin<-cabin_cat
+
+# eliminamos la variable utilizada del entorno de trabajo
+remove(cabin_cat)
+```
+
+Respecto a la variable **Fare**, existen 15 valores cuyo valor es 0, debido al bajo número de valores faltantes, se procederá a la imputación de datos a partir del método de los vecinos más próximos mediante la función `kNN()`. Se considera que las variables que pueden tener relación con el valor del billete son: Clase del billete (**Pclass**), si es o no de cabina (**Cabin**) y el lugar de embarque (**Embarked**). La variable **Embarked** tiene dos valores vacíos, pero ninguno de ellos coincide con los valores que queremos imputar.
+
+```{r imputacion Fare, message = FALSE}
+library(VIM)
+# Se crea el datFrame para imputar los valores
+datos_a_usar <- subset(datos,
+                       select = c("Pclass", "Embarked", "Cabin" ,"Fare"))
+
+# Se pasan a NA los valores que queremos imputar
+index_imputados_fare <- which(datos$Fare==0)
+datos_a_usar$Fare[index_imputados_fare] <- NA
+
+# Se escojen 3 vecinos más proximos
+datos_imputados<-kNN(datos_a_usar,k=3)
+
+# Se muestran los datos imputados
+datos_imputados$Fare[index_imputados_fare]
+
+# Se pasan al dataFrame original
+datos$Fare <- datos_imputados$Fare
+
+# eliminamos los conjuntos de datos que no vamos a usar más
+remove(datos_a_usar, datos_imputados, index_imputados_fare)
+```
+
+La variable **Embarked** tiene 3 niveles diferentes, e informa del puerto en que embarcó el pasajero. Contiene dos valores vacios que al igual que en el caso de **Fare** serán imputados. Para esta imputación se usarán también las variables **Fare**, **Pclass** y **Cabin**, ya que se considera que hay una relación entre precio, si es cabina o no, la clase  y el puerto de embarque.
+
+```{r variable Embarked imputacion, message = FALSE }
+library(gdata)
+# Se crea el datFrame para imputar los valores 
+datos_a_usar <- subset(datos,
+                       select = c("Pclass", "Embarked", "Cabin" ,"Fare"))
+
+# Se pasan a NA los valores que queremos imputar
+index_imputados_embarked<-which(datos$Embarked=="")
+datos_a_usar$Embarked[index_imputados_embarked]<-NA
+
+# Se escojen 3 vecinos más proximos
+datos_imputados<-kNN(datos_a_usar,k=3)
+
+# Se muestran los datos imputados
+datos_imputados$Embarked[index_imputados_embarked]
+
+# Se pasan al dataFrame original y se eliminan los niveles que ya no se usan (i.e. "")
+datos$Embarked<-datos_imputados$Embarked
+datos$Embarked<-drop.levels(datos$Embarked)
+
+# eliminamos las variables no usadas posteriormente
+remove(datos_a_usar, datos_imputados, index_imputados_embarked)
+```
+
+#### 3.1.2. Valores NA
+
+Existen un total de 177 valores NA que se han de estudiar para  tomar una decisión a cerca de su tratamiento. Debido al gran numero con respecto al total (177 sobre 891) no se considera una buena opción eliminar los casos. Por lo tanto, primero se evaluará si dichos valores (nulos) tienen una relación con el hecho que el indidividuo sobreviva o no. Anterioremente, se ha visto que la clase determina en cierto modo las proabibilidades de sobrevivir o no, y posiblemente el hecho de disponer o no de la edad puede depender de la clase. Para ver si hay o no dependencia entre **Survived** y **Age** primero se categorizará la variable **Age** en función de si se especifica o no la edad, para posteriomente hacer un test *Chi-cuadrado* de dependencia de variables mediante la función `chisq.test()` donde se contrastan las siguiente hipótesis:
+
+$$
+\text{Hipótesis nula. } H_0 \text{: Las variables son independientes.}
+\\
+\text{Hipótesis alternativa. } H_1 \text{: Las variables  no son independientes.}
+$$
+```{r variable Age valores no presentes, message = FALSE }
+
+edad_presente <- sapply(datos$Age, function (age) if (is.na(age)) "edad_no_especificada" else "edad_especificada")
+
+# Creación de tabla de contingencia 
+table_prop<-table(edad_presente,datos$Survived)
+# Test Chi cuadrado
+chisq.test(table_prop)
+
+# eliminamos variables no usadas posteriormente
+remove(edad_presente, table_prop)
+```
+
+Como se puede observar el $\text{p-valor} < \alpha=0.05$, donde $\alpha = 0.05$ es el nivel de significación para un nivel de confianza del 95%, por lo tanto, rechazamos $H_0$  concluyendo que las variables son dependientes, luego existe una relación entre haber proporcionado la edad y la supervivencia.  
+
+Por ello, no se recomienda hacer ningún cálculo como puede ser la media para completar esta variable ya que le estariamos dando un valor promedio no beneficiandonos de su posible poder de predicción para el análisis e introducir error. Una posible solución es imputar los valores por medios probabilísticos a partir de la función `knn()`, y que los casos más cercanos en cuanto a otros atributos determinen el valor. Sin embargo, el gran número de casos de esta variable puede hacer que su gran numero de predicciones (177 sobre 891) la haga poco realista. Se optará por discretizar la variable en función de grupos de edad, y crear un grupo con estas valores con la etiqueta *no_age*.  Para ello se ve si existe primero alguna relación entre edad y supervivencia, para posteriomente crear los grupos.
+
+```{r variable Age distribución }
+library(ggplot2)
+
+age_survived_with_specified_age <- subset(
+  datos[!is.na(datos$Age), ],
+  select = c(Age, Survived)
+)
+
+# Grafico de conteos totales en
+ggplot(data = age_survived_with_specified_age,
+       aes(x=Age,  fill=Survived)
+       )+geom_histogram(bins = 80)+ylab("Counts")+xlab("Age")
+
+```
+En el histograma de la variable **age** junto con la probabilidad de supervivencia es posible observar que a menos edad mayor tasa de supervivencia. Por lo tanto, nos encontramos ante un escenario dónde sabemos que la edad no especificada es dependiente con la variable **Survived**. Además, pertenecer al rango de menos edad significa tener más probabilidad de sobrevivir. Por lo tanto, para discretizar la variable se ha de escoger un valor óptimo que discretice la edad en grupos maximizando la información sobre la supervivencia o no del pasajero. Para ello se usará los *Odds-Ratio*, que nos medirá si es más probable sobrevivir a una edad con respecto al resto. Para ello se van a escoger edades entre 1 y 30 como humbral de discrimanción y se va a hacer un gráfico con el resultado. 
+
+```{r variable Age odds ratop de supervivencia}
+survived_age<-relevel(age_survived_with_specified_age$Survived,ref="1")
+result<-double(30)
+for (i in 1:30){
+
+  age_th <- as.factor(sapply(age_survived_with_specified_age$Age, 
+                   function (age) if (age>i) 0 else 1))
+    
+  age_th<-as.factor(age_th)
+  age_th<-relevel(age_th,ref="1")
+  tabla<-table(age_th,survived_age)
+
+  or<-(tabla[1]*tabla[4])/(tabla[2]*tabla[3])
+  result[i]<-or
+}
+plot(result, xlab ="Age", ylab="Odds-Ratio", yaxp  = c(0, 10, 10))
+```
+
+Como se puede observar, a medida que disminuye la edad aumenta la probabilidad de supervivencia, la cual se mantiene al doble para edades menores de 16 años. A partir de 21, se puede considerar que la edad no es significativa siendo la *Odds-ratio* similiar a 1. Escoger una edad muy baja, mejora la predicción , sin embargo,  como se ve en el histograma, la mayoria de la poblacion esta concentrada en edades alrededor de 30 años. Por lo tanto,  esta variable dejará de ser util para un segmento amplio de nuestro juego de datos. Escoger un valor muy alto de edad, puede hacer la variable mas útil para una mayor parte del juego de datos pero con menor capacidad predictiva. Por ello se escogera un valor de compromiso, considerando como que el doble de probabilidad de supervivencia es un buen indicador y además incluye a un amplio segmento de la población joven, por lo que para discretizar la variable se usará 16 años como limite entre niño y adulto. Teniendo en cuenta esto, la variable **Age** se discretizará de la siguiente manera para maximizar la información entre los grupos.  
+
+```{r discretización variable age}
+## Grupos niño, adulto y sin especificar
+categorizar_edad <- function(age) {
+  if (is.na(age)) {
+    "no_age"
+  }
+  else if (age <= 16){
+    "child"
+  }
+  else {
+    "adult"
+  }
+}
+
+datos$Age<-as.factor(mapply(categorizar_edad, 
+                            age=datos$Age))
+
+```
+
+### 3.2. Identificación y tratamiento de valores extremos. 
+
+El análisis de los valores extremos, se va a efectuar sobre las variables continuas que son: **Fare**, **SibSp** y **Parch**. 
+
+```{r Fare valores extremos, message = FALSE }
+library(DescTools)
+
+boxplot(datos$Fare, col="orange", xlab="Fare")
+```
+
+Debido a la naturaleza de la variable **Fare**, predominan los precios bajos y, por lo tanto, sigue una distribución lognormal lo que va a provocar una gran cantidad de valores extremos los cuales están aceptados porque representan tickets más caros debido a las condiciones (i.e. cabina, embarque...). Mediante la  transformación de Box Cox se intenta mejorar la normalidad y homocedasticidad, lo que llevará a una menor proporción de valores extremos.
+
+```{r}
+x<-datos$Fare
+x.norm<- BoxCox(x, lambda = BoxCoxLambda(x))
+
+par(mfrow=c(2,2)) 
+
+qqnorm(x, main="Lognormal") 
+qqline(x,col=2)
+
+qqnorm(x.norm, main="Box-Cox")
+qqline(x.norm,col=2)
+
+hist(x,main="Lognormal", xlab = "Fare", col="orange") 
+hist(x.norm, main="Box-Cox", xlab = "Fare", col="orange")
+
+# Se introducen los datos en el dataFrame
+
+datos$Fare<-x.norm
+```
+Despues de la transformación, ya no se observa la presencia de *outliers* los cuales habían sido previamente aceptados por la naturalidad de los datos: 
+
+```{r boxplots Fare}
+boxplot(datos$Fare, col="orange", xlab="Fare")
+```
+En el caso de las variables **SibSp** y **Parch**  si realizamos el *boxplot* se observa que presentan muchos valores extremos. Esto es debido a la naturaleza de las variables que se puede visualizar mediante histrogramas y la curva de los cuartiles teoricos vs observados. Como las variables **SibSp** y **Parch** contienen el número de parentescos es común tener predominancia en los núemeros bajos y menos casos a medida que aumenta el valor de la variable. Aunque son númericas, su distribución es similiar a la de las variable discretas con las observaciones agrupándose en determinados valores (i.e. 0, 1, 2....). Debido a su naturaleza se considera que la discretización de ambas aportará más valor al análisis ya que no es posible normalizar la variable. 
+
+```{r SibSp valores extremos, message = FALSE }
+x<-datos$SibSp
+y<-datos$Parch
+
+boxplot(x, xlab="SibSp", col = "orange")
+boxplot(y, xlab= "Parch", col= "orange")
+
+par(mfrow=c(2,2)) 
+
+qqnorm(x, main="SibSp") 
+qqline(x,col=2)
+
+qqnorm(y, main="Parch")
+qqline(y,col=2)
+
+hist(x, main="", xlab = "SibSp", col="orange") 
+hist(y, main="", xlab = "Parch", col="orange")
+```
+
+Si la variable **SibSp** nos indica el número de conyugales o hermanos y la variable **Parch** nos indica el número de padres e hijos debe de haber una relación entre dichas variables.
+
+```{r SibSp y Parch}
+
+SibSp_factor<- as.factor(datos$SibSp)
+Parch_factor<- as.factor(datos$Parch)
+
+chisq.test(Parch_factor, SibSp_factor)
+```
+
+Teniendo en cuenta que p-valor<0.05,  ambas variables son dependientes. Para no solapar ambas variables en el algoritmo de predicción se crea una nueva variable que contenga el número de parientes la cual será la suma de ambas variables.
+
+```{r creacion variable parents y su dependencia en la supervivencia}
+# creamos la nueva variable
+
+datos$Parents <- as.factor(datos$SibSp + datos$Parch)
+chisq.test(datos$Parents, datos$Survived)
+
+```
+
+Teniendo en cuenta que el p-valor<0.05 se puede afirmar que existe una dependencia entre la nueva variable **Parents** y la supervivencia.Finalmente se eliminan las variables **SibSp** y **Parch** antes de iniciar el análisis de los datos. 
+
+
+```{r version final de los datos }
+datos$SibSp<-NULL
+datos$Parch<-NULL
+```
+
+## 3.3. Comprobación de la variable Ticket
+
+Se cree que la información de la variable **Ticket** está implícita en la variable **Fare** ya que el precio de un mismo número de ticket debería de tener igual valor. Para comprobar esta posibilidad se realiza el siguiente análisis.
+
+```{r}
+# comprobamos si existe alguna diferencia de precio para algún ticket cuyo valor es igual.
+tickets_check<-c()
+for (i in levels(datos$Ticket)){
+ a <- length(unique(datos$Fare[which(datos$Ticket==i)]))
+ if(a>1) {
+   tickets_check <- append(tickets_check,i)
+   }
+}
+tickets_check
+
+subset(datos[datos$Ticket==tickets_check[1], ], select = c(PassengerId, Ticket, Cabin, Embarked, Fare))
+```
+
+Se observa que solo un número de ticket presenta valores diferentes en la variable **Fare** y que esta diferencia es muy pequeña. Por lo tanto, consideramos que la información de la variable **Ticket** ya está explicada en la variable **Fare** y, por lo tanto, no es necesaria para el análisis. Además, se considera más conveniente utilizar la variable **Fare** ya que no es identificadora y ayudará más a comprender la supervivencia de los pasajeros e función del precio que hayan pagado por el billete. 
+
+```{r}
+# imprimos le fichero después de las modificaciones realizadas.
+#write.csv(datos, '../data/titanic_clean_data.csv', row.names = F)
+```
+
+
+```{r}
+# eliminamos las variables que no usaremos para el análisis
+datos$PassengerId<-NULL
+datos$Name<-NULL
+datos$Ticket<-NULL
+```
+
+Realizamos un `attach` de los datos después de modificar las limpiar las variables para facilitar el uso de ellas en el análisis.
+
+```{r}
+attach(datos)
+```
+
+# 4. Entrenamiento de los algoritmos
+
+## 4.1. Algoritmos de clasificación 
+
+Teniendo en cuenta los resultados del aparado anterior se van a usar la siguientes variables para los algortimos de clasificación: **Pclass**, **Sex**, **Age**, **Parents**, **Cabin**, **Embarked** y **Fare**. Siendo la variable objetivo **Survived**
+
+#### 4.1.1 Árbol de decisión
+
+Entrenamos un árbol de decisió con todo el set de datos.
+
+```{r results='hide'}
+library(rpart)
+library(rpart.plot)
+library(caret)
+```
+
+
+```{r, warning=FALSE}
+# Selección variable clase y variables predictoras
+y_variable<-subset(datos, select = Survived)
+x_variables <-subset(datos, select = c(Pclass, Sex, Age, Fare, Cabin, Embarked, Parents))
+```
+
+Generamos el árbol de decisión utilizando todas las variables .
+
+```{r}
+# generamos el árbol de decisión
+arbol_1 <- rpart(formula = Survived ~ ., data = datos)
+rpart.plot(arbol_1)
+```
+
+
+### 4.3.2.2 RandomForest
+
+Generamos y entrenamos un random Forest con todo el set de datos.
+
+```{r, results='hide'}
+library(randomForest)
+# devtools::install_github("MI2DataLab/randomForestExplainer")
+library(randomForestExplainer)
+```
+
+```{r}
+rf <- randomForest(
+  Survived ~ .,
+  data=datos
+)
+```
+
+# 5. Procesamiento de los datos de test
+
+Importamos el fichero de test.
+
+```{r}
+datos_test <- read.csv('./test.csv')
+```
+
+```{r}
+str(datos_test)
+```
+
+Analizamos los valores vacíos para aplicar el mismo procesamiento que al set de datos.
+
+```{r}
+# Presencia de valores NA
+colSums(is.na(datos_test))
+
+# Presencia de valores vacíos
+colSums(datos_test=="")
+
+# Presencia de valores 0
+colSums(datos_test==0)
+```
+
+Procesamos la variable PClass.
+
+```{r}
+datos_test$Pclass<-as.factor(datos_test$Pclass)
+```
+
+
+Procesamos la variable Cabin.
+
+```{r}
+datos_test$Cabin <- as.factor(
+  sapply(datos_test$Cabin, function (cabin) if (cabin=="") "without_cabin" else "with_cabin")
+)
+```
+
+Procesamos la variable Fare con el algoritmo kNN.
+
+```{r}
+datos_test$Fare[datos_test$Fare==0] <- NA
+index_na <- is.na(datos_test$Fare)
+datos_test$Fare[index_na] <- kNN(
+  datos_test, variable = c("Pclass", "Embarked", "Cabin" ,"Fare"), 3
+  )$Fare[index_na]
+```
+
+Categorizamos la variable Age.
+
+```{r}
+categorizar_edad <- function(age) {
+  if (is.na(age)) {
+    "no_age"
+  }
+  else if (age <= 16){
+    "child"
+  }
+  else {
+    "adult"
+  }
+}
+
+datos_test$Age<-as.factor(mapply(categorizar_edad, 
+                            age=datos_test$Age))
+```
+
+Transformamos la variable Fare.
+
+```{r}
+datos_test$Fare <- BoxCox(datos_test$Fare, lambda = BoxCoxLambda(x))
+```
+
+Generación de la variable Parents.
+
+```{r}
+datos_test$Parents <- as.factor(datos_test$SibSp + datos_test$Parch)
+```
+
+# 6. Predicción
+
+Realizamos la predicción para extraer el fichero y presentarlo en kaggle.
+
+Árbol de decisión:
+
+```{r}
+predict_tree <- predict(arbol_1, newdata = datos_test, type = "class")
+result_df <- data.frame(predict_tree)
+result_df$PassengerId <- datos_test$PassengerId
+result_df$Survived <- result_df$predict_tree
+result_df$predict_tree <- NULL
+write.csv(result_df, './decisional_tree_result.csv', row.names = F)
+```
+
+Random Forest:
+
+```{r}
+predict_rf <- predict(rf, newdata = datos_test)
+result_df <- data.frame(predict_rf)
+result_df$PassengerId <- datos_test$PassengerId
+result_df$Survived <- result_df$predict_rf
+result_df$predict_rf <- NULL
+write.csv(result_df, './random_forest_result.csv', row.names = F)
+```
+
