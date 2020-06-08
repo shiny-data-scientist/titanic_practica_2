@@ -12,7 +12,7 @@ Dentro del directorio data:
 
 Dentro del directorio R_environment_files:
 - [Titanic.Rmd](R_environment_files/Titanic.Rmd): Fichero Rmd con todo el código R para generar el fichero limpio y el fichero de salida HTML.
-- [Titanic.html](R_environment_files/Titanic.html): Fichero HTML que contiene todo el código R ejecutado, descripciones y gráficos de todo el procesamiento.
+- [Titanic.html](R_environment_files/Titanic.html) o [Titanic.pdf](R_environment_files/Titanic.pdf): Fichero HTML o PDF que contiene todo el código R ejecutado, descripciones y gráficos de todo el procesamiento.
 
 Para más información acerca de los ficheros acceder a la [Wiki](https://github.com/shiny-data-scientist/titanic_practica_2/wiki)
 
