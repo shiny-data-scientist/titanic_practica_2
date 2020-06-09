@@ -94,12 +94,13 @@ Las variables a tratar en este apartado son **Fare**, **Cabin** y **Embarked**.
 Respecto a la variable **Cabin**, proporciona información de la cabina donde se alojó un pasajero. Los valores vacíos corresponden a pasajeros que no se han alojado en cabina. El hecho que esté alojado en cabina debería de estar relacionado con la clase en al que se aloja el pasajero, y por lo tanto seguramente con la probabilidad de supervivencia. Primero se comprobará mediante un test *Chi-cuadrado* si existe o no dependencia entre tener asignado un número de cabina y la supervivencia mediante el siguiente test de hipótesis: 
 
 $$
-\text{Hipótesis nula. } H_0 \text{: Las variables son independientes.}  
+H_0 \text{: Las variables son independientes.}  
 $$
 $$
-\text{Hipótesis alternativa. } H_1 \text{: Las variables  no son independientes.}  
+H_1 \text{: Las variables no son independientes.}  
 $$
 
+donde, $H_0$ representa la hipótesis nula y $H_1$ la hipótesis alternativa.
 
 ```{r variable Cabin, message = FALSE }
 
@@ -179,10 +180,14 @@ remove(datos_a_usar, datos_imputados, index_imputados_embarked)
 Existen un total de 177 valores NA que se han de estudiar para  tomar una decisión a cerca de su tratamiento. Debido al gran numero con respecto al total (177 sobre 891) no se considera una buena opción eliminar los casos. Por lo tanto, primero se evaluará si dichos valores (nulos) tienen una relación con el hecho que el indidividuo sobreviva o no. Anterioremente, se ha visto que la clase determina en cierto modo las proabibilidades de sobrevivir o no, y posiblemente el hecho de disponer o no de la edad puede depender de la clase. Para ver si hay o no dependencia entre **Survived** y **Age** primero se categorizará la variable **Age** en función de si se especifica o no la edad, para posteriomente hacer un test *Chi-cuadrado* de dependencia de variables mediante la función `chisq.test()` donde se contrastan las siguiente hipótesis:
 
 $$
-\text{Hipótesis nula. } H_0 \text{: Las variables son independientes.}  
-\\
-\text{Hipótesis alternativa. } H_1 \text{: Las variables  no son independientes.}  
+H_0 \text{: Las variables son independientes.}  
 $$
+$$
+H_1 \text{: Las variables no son independientes.}  
+$$
+
+donde, $H_0$ representa la hipótesis nula y $H_1$ la hipótesis alternativa.
+
 ```{r variable Age valores no presentes, message = FALSE }
 
 edad_presente <- sapply(datos$Age, function (age) if (is.na(age))
@@ -425,10 +430,13 @@ lines(density(Fare), col = 'red', lwd='3')
 En el gráfico anterior vemos que pese a qué la variable ha sido transformada no sigue una distribución normal. Lo podemos reforzar con un test de normalidad de *saphiro* donde las hipótesis a contrastar son las siguientes:
 
 $$
-\text{Hipótesis nula. } H_0 \text{: Sigue una distribución normal}  
-\\
-\text{Hipótesis alternativa. } H_1 \text{: NO sigue una distribución normal}  
+H_0 \text{: La variable se distribuye como una normal.}  
 $$
+$$
+H_1 \text{: La varaible no se distribuye como una normal.}  
+$$
+
+donde, $H_0$ representa la hipótesis nula y $H_1$ la hipótesis alternativa.
 
 ```{r}
 shapiro.test(Fare)
@@ -438,10 +446,13 @@ Debido a qué $p-valor < \alpha = 0.05$ rechazamos la hipótesis nula y aceptamo
 Para comprobar la homogeneidad de la variable **Fare** se van a utilizar las variables que se consideran más críticas para definir el precio. Estas son las variables **Embarked**, **Pclass** y **Cabin**. Debido a qué la variable **Fare** no sigue una distribución normal, nos vemos obligados a realizar un test basado en la mediana. Se va a aplicar el test de Levene ya que este nos permite medir la homocedasticidad o homogeneidad a partir de la mediana sin importar que los datos no sigan una distribución normal. Las hipótesis a contrastar en el test es la siguiente:
 
 $$
-\text{Hipótesis nula. } H_0 \text{: NO hay diferencias significativas entre las varianzas}  
-\\
-\text{Hipótesis alternativa. } H_1 \text{: Hay diferencias significativas entre las varianzas}  
+H_0 \text{: No hay diferencias significativas entre las varianzas.}  
 $$
+$$
+H_1 \text{: Hay diferencias significativas entre las varianzas}  
+$$
+
+donde, $H_0$ representa la hipótesis nula y $H_1$ la hipótesis alternativa.
 
 ```{r}
 # Fare - Embarked
@@ -467,10 +478,14 @@ Primero se analizará la dependencia de cada una de las variables del conjunto d
 Mediante el test *Chi-cuadrado* se van a contrastar las siguientes hipótesis:
 
 $$
-\text{Hipótesis nula. } H_0 \text{: Las variables son independientes.}
-\\
-\text{Hipótesis alternativa. } H_1 \text{: Las variables  no son independientes.}
+H_0 \text{: Las variables son independientes.}
 $$
+$$
+H_1 \text{: Las variables no son independientes.}
+$$
+
+donde, $H_0$ representa la hipótesis nula y $H_1$ la hipótesis alternativa.
+
 Los pares de variables a analizar son:  
 - **PClass** vs **Survived**  
 - **Sex** vs **Survived**  
@@ -535,11 +550,13 @@ Se define el siguiente contraste de hipótesis:
 
 $$
 H_0: \mu_1 = \mu_2  
-\\
-H_1: \mu_1 \neq \mu_2  
-\\
-\text{donde, 1 corresponde al conjunto que sobrevivió y 2 al que no sobrevivió}  
 $$
+$$
+H_1: \mu_1 \neq \mu_2  
+$$
+
+donde, $\mu$ representa la media poblacional, 1 corresponde al conjunto que sobrevivió y 2 al que no sobrevivió.
+
 
 En base al Teorema del límite central tenemos la variable $\frac{\overline{X}_1 - \overline{X}_2}{S_{\overline{X}_1 - \overline{X}_2}}$ que sigue una distribución normal $N(0, 1)$.
 
